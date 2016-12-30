@@ -13,6 +13,8 @@
   <modules>
     <module>cloudsim</module>
     <module>cloudsim-examples</module>
+    <module>hdfssim</module>
+    <module>hdfssim-examples</module>
   </modules>
 
   <build>
@@ -63,7 +65,6 @@
     <artifactId>commons-math3</artifactId>
     <version>3.3</version>
   </dependency>
-              
   </dependencies>
   
 </project>

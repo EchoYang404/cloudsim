@@ -4,3 +4,5 @@
 /documentation/target/
 /modules/cloudsim/target/
 /modules/cloudsim-examples/target/
+/modules/hdfssim/target/
+/modules/hdfssim-examples/target/
