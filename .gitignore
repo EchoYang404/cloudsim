@@ -1,0 +1,6 @@
+.idea/
+*.iml
+
+/documentation/target/
+/modules/cloudsim/target/
+/modules/cloudsim-examples/target/
