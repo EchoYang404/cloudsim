@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.cloudbus.cloudsim.*;
 
 public final class Id {
@@ -23,10 +24,12 @@ public final class Id {
         COUNTERS.put(Host.class, 1);
         COUNTERS.put(DatacenterBroker.class, 1);
         COUNTERS.put(Pe.class, 1);
+
+
         COUNTERS.put(Block.class,1);
-        COUNTERS.put(HDDStorage.class,1);
-        COUNTERS.put(SSDStorage.class,1);
+        COUNTERS.put(Storage.class,1);
         COUNTERS.put(HFile.class,1);
+        COUNTERS.put(Datanode.class,1);
     }
 
     private Id() {
@@ -52,7 +55,7 @@ public final class Id {
             }
         }
 
-        int result = -1;
+        int result;
         if (matchClass == null) {
             NO_COUNTERS.add(clazz);
             result = pollGlobalId();
@@ -73,4 +76,8 @@ public final class Id {
         return globalCounter++;
     }
 
+    public static synchronized int getId(final Class<?> clazz)
+    {
+        return COUNTERS.get(clazz);
+    }
 }
