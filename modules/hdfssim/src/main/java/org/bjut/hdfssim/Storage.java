@@ -8,116 +8,86 @@
 
 package org.bjut.hdfssim;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.util.Id;
 
-public abstract class Storage {
-	private int id;
+import javax.xml.crypto.Data;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public abstract class Storage implements Serializable{
+	private int id = Id.pollId(this.getClass());
 	private double capacity;
 	private double usedSize;
-	private List<Block> blockList;
+	private Map<Integer,Block> blockList;
 	private double maxTransferRate;
+	private Datanode datanode;
 
 	public Storage(int id, double capacity)
 	{
 		this.id = id;
 		this.capacity = capacity;
-		this.blockList = new ArrayList<>();
-	}
-	/**
-	 * Gets the id of the storage.
-	 * 
-	 * @return the id of this storage
-	 */
-	public int getId() {
-		return id;
+		this.usedSize = 0;
+		this.blockList = new HashMap<>();
+		this.maxTransferRate = 0;
 	}
 
-	/**
-	 * Gets the total capacity of the storage in MByte.
-	 * 
-	 * @return the capacity of the storage in MB
-	 */
-	public double getCapacity() {
-		return capacity;
+	public Storage(int id, double capacity, Datanode datanode)
+	{
+		this.id = id;
+		this.capacity = capacity;
+		this.usedSize = 0;
+		this.blockList = new HashMap<>();
+		this.maxTransferRate = 0;
+		this.datanode = datanode;
 	}
 
-	/**
-	 * Gets the current size of the storage in MByte.
-	 * 
-	 * @return the current size of the storage in MB
-	 */
-	public double getCurrentSize() {
-		return usedSize;
-	}
-
-	/**
-	 * Gets the maximum transfer rate of the storage in MByte/sec.
-	 * 
-	 * @return the maximum transfer rate in MB/sec
-	 */
 	public double getMaxTransferRate() {
-		return this.maxTransferRate;
+		return maxTransferRate;
 	}
 
-	/**
-	 * Gets the available space on this storage in MByte.
-	 * 
-	 * @return the available space in MB
-	 */
-	public double getAvailableSpace() {
-		return capacity - usedSize;
+	public void setMaxTransferRate(double maxTransferRate) {
+		this.maxTransferRate = maxTransferRate;
 	}
 
-	/**
-	 * Sets the maximum transfer rate of this storage system in MByte/sec.
-	 * 
-	 * @param rate the maximum transfer rate in MB/sec
-	 * @return <tt>true</tt> if the setting succeeded, <tt>false</tt> otherwise
-	 */
-	public boolean setMaxTransferRate(int rate) {
-		this.maxTransferRate = rate;
+	public void addBlock(Block block)
+	{
+		this.blockList.put(block.getId(),block);
+		block.setStorage(this);
+		usedSize += block.getSize();
+	}
+
+	public boolean isFull(Block block)
+	{
+		if(this.usedSize + block.getSize() <= this.capacity)
+		{
+			return false;
+		}
 		return true;
 	}
 
-	/**
-	 * Checks if the storage is full or not.
-	 * 
-	 * @return <tt>true</tt> if the storage is full, <tt>false</tt> otherwise
-	 */
-	public boolean isFull() {
-		if(capacity - usedSize > Configuration.getIntProperty("blockSize"))
+	public boolean isContainBlock(int id)
+	{
+		if(this.blockList.containsKey(id))
 		{
 			return true;
 		}
 		return false;
 	}
 
-	/**
-	 * Gets the number of files stored on this device.
-	 * 
-	 * @return the number of stored files
-	 */
-	public int getNumStoredBlock() {
-		return blockList.size();
+	public Datanode getDatanode() {
+		return datanode;
 	}
 
-	public boolean addBlock(Block block)
-	{
-		if(block.addStorage(this))
-		{
-			this.blockList.add(block);
-			this.usedSize += block.getSize();
-			return true;
-		}
-		return false;
+	public void setDatanode(Datanode datanode) {
+		this.datanode = datanode;
 	}
 
-	public boolean deleteBlock(Block block)
+	public double getUsedSize()
 	{
-		block.deleteStorage(this);
-		blockList.remove(block);
-		this.usedSize -= block.getSize();
-		return true;
+		return this.usedSize;
 	}
 }

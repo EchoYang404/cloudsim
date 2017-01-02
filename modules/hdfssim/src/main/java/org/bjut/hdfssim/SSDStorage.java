@@ -1,25 +1,20 @@
 package org.bjut.hdfssim;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.util.Id;
 
 import java.util.List;
 
 public class SSDStorage extends Storage {
-
-    private int id;
-    private double capacity;
-    private List<Block> blockList;
-    private double maxTransferRate;
-
     public SSDStorage(double capacity)
     {
         super(Id.pollId(SSDStorage.class),capacity);
-        maxTransferRate = Configuration.getDoubleProperty("SSDMaxTransferRate");
+        this.setMaxTransferRate(Configuration.getDoubleProperty("SSDMaxTransferRate"));
     }
 
-    public SSDStorage(int id, double capacity)
+    public SSDStorage(double capacity, Datanode datanode)
     {
-        super(id,capacity);
-        maxTransferRate = Configuration.getDoubleProperty("SSDMaxTransferRate");
+        super(Id.pollId(SSDStorage.class),capacity,datanode);
+        this.setMaxTransferRate(Configuration.getDoubleProperty("SSDMaxTransferRate"));
     }
 }

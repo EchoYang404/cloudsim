@@ -29,6 +29,7 @@ public class HDFSHost extends Host {
         super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler);
         hddStorage = new HDDStorage(hddCapacity);
         ssdStorage = new SSDStorage(ssdCapacity);
+
     }
     public HDFSHost(int id, double hddCapacity, double ssdCapacity)
     {
@@ -37,17 +38,15 @@ public class HDFSHost extends Host {
         ssdStorage = new SSDStorage(ssdCapacity);
     }
 
+//    public boolean addBlocktoHDDStorage(Block block)
+//    {
+//        return hddStorage.addBlock(block);
+//    }
 
-
-    public boolean addBlocktoHDDStorage(Block block)
-    {
-        return hddStorage.addBlock(block);
-    }
-
-    public boolean addBlocktoSSDStorage(Block block)
-    {
-        return ssdStorage.addBlock(block);
-    }
+//    public boolean addBlocktoSSDStorage(Block block)
+//    {
+//        return ssdStorage.addBlock(block);
+//    }
 
     public boolean setDatacenter(HDFSDatacenter datacenter)
     {

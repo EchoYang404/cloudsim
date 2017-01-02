@@ -2,52 +2,48 @@ package org.bjut.hdfssim;
 
 import org.bjut.hdfssim.util.Id;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
+import java.util.*;
 
-public class Block {
+public class Block implements Serializable{
+    private HFile hFile;
     private int id;
     private double size;
-    private List<Storage> storageList;
+    private int currentNum;
+    private boolean isMigrate;
+    private Storage storage;
 
-    public Block(double size)
+    public Block(HFile hFile,int id,double size)
     {
-        this.id = Id.pollId(Block.class);
-        this.size = size;
-        this.storageList = new ArrayList<>();
-    }
-
-    public Block(int id, double size)
-    {
+        this.hFile = hFile;
         this.id = id;
         this.size = size;
-        this.storageList = new ArrayList<>();
-    }
-
-    public int getId()
-    {
-        return id;
     }
 
     public double getSize() {
         return size;
     }
 
-    public boolean addStorage(Storage storage)
+    public int getId() {
+        return id;
+    }
+
+    public void setStorage(Storage storage) {
+        this.storage = storage;
+    }
+
+    public Storage getStorage() {
+        return storage;
+    }
+
+    public int getTotalNumOfRack()
     {
-        if(Configuration.getIntProperty("replicaCount") > storageList.size())
+        Iterator<Block> blockIterator = hFile.getReplicaListById(this.id).iterator();
+        Set<Integer> racks = new HashSet<>();
+        while(blockIterator.hasNext())
         {
-            storageList.add(storage);
-            return true;
+            racks.add(blockIterator.next().getStorage().getDatanode().getRackId());
         }
-        return false;
+        return racks.size();
     }
-
-    public boolean deleteStorage(Storage storage)
-    {
-        storageList.remove(storage);
-        return true;
-    }
-
-
 }
