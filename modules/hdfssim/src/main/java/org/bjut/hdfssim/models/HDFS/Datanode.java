@@ -1,36 +1,26 @@
 package org.bjut.hdfssim.models.HDFS;
 
-import org.bjut.hdfssim.Block;
-import org.bjut.hdfssim.HDDStorage;
-import org.bjut.hdfssim.SSDStorage;
-import org.bjut.hdfssim.Storage;
+import org.bjut.hdfssim.*;
 import org.bjut.hdfssim.util.Id;
-import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Pe;
 
-import javax.xml.crypto.Data;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Random;
 
 public class Datanode implements Serializable {
     private int id = Id.pollId(Datanode.class);
     private int rackId;
-    private HDDStorage hddStorage;
-    private SSDStorage ssdStorage;
-    //TODO
-    transient private Host host;
+    private Storage hddStorage;
+    private Storage ssdStorage;
+    private HDFSHost host;
 
-    public Datanode(int rackId) {
+    public Datanode(int rackId, double hddCapacity, double hddMaxTransferRate, double ssdCapacity, double ssdMaxTransferRate, double bw, int coreNum, double mips) {
         this.rackId = rackId;
+        this.hddStorage = new Storage(this, hddMaxTransferRate, hddCapacity);
+        this.ssdStorage = new Storage(this, ssdMaxTransferRate, ssdCapacity);
+        this.host = new HDFSHost(this, ssdMaxTransferRate, hddMaxTransferRate, bw, coreNum, mips);
     }
 
-    public Datanode(int rackId, int hddCapacity, int ssdCapacity)
-    {
-        this.rackId = rackId;
-        this.hddStorage = new HDDStorage(hddCapacity,this);
-        this.ssdStorage = new SSDStorage(ssdCapacity,this);
-    }
+
     public boolean addBlock(Block block) {
         if (isContainBlock(block.getId())) {
             return false;
@@ -71,13 +61,15 @@ public class Datanode implements Serializable {
         return rackId;
     }
 
-    public double getSSDStorageUsage()
-    {
+    public double getSSDStorageUsage() {
         return ssdStorage.getUsedSize();
     }
 
-    public double getHDDStorageUsage()
-    {
+    public double getHDDStorageUsage() {
         return hddStorage.getUsedSize();
+    }
+
+    public HDFSHost getHost() {
+        return host;
     }
 }
