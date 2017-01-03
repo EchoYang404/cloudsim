@@ -1,20 +1,23 @@
 package org.bjut.hdfssim.models.HDFS;
 
+import com.google.gson.Gson;
 import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
-import org.bjut.hdfssim.util.Id;
+import org.bjut.hdfssim.util.HDFSConfig;
 
-import javax.xml.crypto.Data;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.Serializable;
 import java.util.*;
 
 public class Namenode implements Serializable {
     private double blockSize = 64;
     private int replicaCount = 3;
-    private int rackCount = 10;
     private List<HFile> HFileList = new ArrayList<>();
     private Map<Integer, List<Datanode>> datanodeList = new HashMap<>(); // Map<rackId, List<datanode>>
+
+    public Namenode() {}
 
     public double getBlockSize() {
         return blockSize;
@@ -24,11 +27,11 @@ public class Namenode implements Serializable {
         return replicaCount;
     }
 
-    public void addDatanode(int rackId, Datanode datanode) {
-        if (!datanodeList.containsKey(rackId)) {
-            this.datanodeList.put(rackId, new ArrayList<>());
+    public void addDatanode(Datanode datanode) {
+        if (!datanodeList.containsKey(datanode.getRackId())) {
+            this.datanodeList.put(datanode.getRackId(), new ArrayList<>());
         }
-        this.datanodeList.get(rackId).add(datanode);
+        this.datanodeList.get(datanode.getRackId()).add(datanode);
     }
 
 
@@ -39,41 +42,49 @@ public class Namenode implements Serializable {
         return datanodeList;
     }
 
-    public void setHFileList(List<HFile> HFileList) {
-        if (datanodeList.isEmpty()) {
+    private void uploadFiles() {
+        if (this.datanodeList.isEmpty()) {
             try {
                 throw new Exception("DatanodeList is empty!");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        if (this.HFileList.isEmpty()) {
+            try {
+                throw new Exception("FileList is empty!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         for (HFile file : HFileList) {
             for (List<Block> replicaList : file.getBlockList().values()) {
-                while(!addReplicaList(replicaList)){}
+                while(!uploadReplica(replicaList)){}
             }
         }
     }
 
-    private boolean addReplicaList(List<Block> replicaList) {
+    private boolean uploadReplica(List<Block> replicaList) {
         Random random = new Random();
-        int rackId = random.nextInt(this.rackCount);
+        int rackCount = this.datanodeList.size();
+        int rackId = random.nextInt(rackCount);
         int successNum = 0;
         int notAvailbleRack = rackId;
 
         Iterator<Block> blockIterator = replicaList.iterator();
         // add first block
-        if (addBlockToRack(blockIterator.next(), rackId)) {
+        if (uploadBlockToRack(blockIterator.next(), rackId)) {
             successNum++;
         }
         // add second block
-        if (addBlockToRack(blockIterator.next(), rackId)) {
+        if (uploadBlockToRack(blockIterator.next(), rackId)) {
             successNum++;
         }
         // add rest blocks
 
         while (blockIterator.hasNext()) {
-            while(notAvailbleRack == (rackId = random.nextInt(this.rackCount))){}
-            if (addBlockToRack(blockIterator.next(), rackId)) {
+            while(notAvailbleRack == (rackId = random.nextInt(rackCount))){}
+            if (uploadBlockToRack(blockIterator.next(), rackId)) {
                 successNum++;
             }
         }
@@ -84,7 +95,7 @@ public class Namenode implements Serializable {
         return true;
     }
 
-    private boolean addBlockToRack(Block block, int rackId) {
+    private boolean uploadBlockToRack(Block block, int rackId) {
         Datanode node = this.getRandomDatanodeIdByRack(rackId);
         int num = 10;
         while (!node.addBlock(block) && num != 0) {
@@ -118,5 +129,53 @@ public class Namenode implements Serializable {
             }
         }
         return null;
+    }
+
+    public Map<Integer, List<HDFSHost>> getHDFSHostList()
+    {
+        if (this.datanodeList.isEmpty()) {
+            try {
+                throw new Exception("HDFSHostList is empty!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        Map<Integer, List<HDFSHost>> HDFSHostList = new HashMap<>();
+        Iterator<Map.Entry<Integer, List<Datanode>>> entries = this.datanodeList.entrySet().iterator();
+        while(entries.hasNext())
+        {
+            Map.Entry<Integer, List<Datanode>> entry = entries.next();
+            Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
+            HDFSHostList.put(entry.getKey(),new ArrayList<>());
+            while(datanodeIterator.hasNext())
+            {
+                HDFSHostList.get(entry.getKey()).add(datanodeIterator.next().getHost());
+            }
+        }
+        return HDFSHostList;
+    }
+
+    public void createDatanodeFromConfig(String path)
+    {
+        Gson gson = new Gson();
+        try {
+            FileReader fr = new FileReader(path);
+            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            config.createDatanodeList(this);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void createHFileByRadom(int fileNum, int minSize, int maxSize) {
+        Random random = new Random();
+
+        for (int i = 0; i < fileNum; i++) {
+            double size = random.nextInt(maxSize - minSize) + minSize;
+            this.HFileList.add(new HFile(size, this));
+        }
+        uploadFiles();
     }
 }
