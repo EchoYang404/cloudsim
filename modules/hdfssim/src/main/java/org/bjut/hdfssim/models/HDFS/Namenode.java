@@ -6,6 +6,7 @@ import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.util.HDFSConfig;
 
+import javax.xml.crypto.Data;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -131,7 +132,7 @@ public class Namenode implements Serializable {
         return null;
     }
 
-    public Map<Integer, List<HDFSHost>> getHDFSHostList()
+    public Map<Integer, HDFSHost> getHDFSHostList()
     {
         if (this.datanodeList.isEmpty()) {
             try {
@@ -140,16 +141,16 @@ public class Namenode implements Serializable {
                 e.printStackTrace();
             }
         }
-        Map<Integer, List<HDFSHost>> HDFSHostList = new HashMap<>();
+        Map<Integer, HDFSHost> HDFSHostList = new HashMap<>();
         Iterator<Map.Entry<Integer, List<Datanode>>> entries = this.datanodeList.entrySet().iterator();
         while(entries.hasNext())
         {
             Map.Entry<Integer, List<Datanode>> entry = entries.next();
             Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
-            HDFSHostList.put(entry.getKey(),new ArrayList<>());
             while(datanodeIterator.hasNext())
             {
-                HDFSHostList.get(entry.getKey()).add(datanodeIterator.next().getHost());
+                Datanode datanode = datanodeIterator.next();
+                HDFSHostList.put(datanode.getId(),datanode.getHost());
             }
         }
         return HDFSHostList;
