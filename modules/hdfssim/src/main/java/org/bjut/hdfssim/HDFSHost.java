@@ -1,5 +1,9 @@
 package org.bjut.hdfssim;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.provisioners.BwProvisionerForHDFS;
+import org.bjut.hdfssim.provisioners.PeProvisionerForHDFS;
+import org.bjut.hdfssim.provisioners.StorageProvisionerForHDFS;
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
@@ -9,53 +13,40 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HDFSHost extends Host {
-
-    private HDDStorage hddStorage;
-    private SSDStorage ssdStorage;
-    private HDFSDatacenter datacenter;
+public class HDFSHost {
     /**
-     * Instantiates a new host.
-     *
-     * @param id             the host id
-     * @param ramProvisioner the ram provisioner
-     * @param bwProvisioner  the bw provisioner
-     * @param storage        the storage capacity
-     * @param peList         the host's PEs list
-     * @param vmScheduler    the vm scheduler
+     * The id of the HDFSHost.
      */
+    private int id;
 
-    public HDFSHost(int id, double hddCapacity, double ssdCapacity, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler) {
-        super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler);
-        hddStorage = new HDDStorage(hddCapacity);
-        ssdStorage = new SSDStorage(ssdCapacity);
+    private Datanode datanode;
 
-    }
-    public HDFSHost(int id, double hddCapacity, double ssdCapacity)
-    {
-        super(id, new RamProvisionerSimple(2048), new BwProvisionerSimple(10000), 0, new ArrayList<Pe>(), new VmSchedulerTimeShared(new ArrayList<Pe>()));
-        hddStorage = new HDDStorage(hddCapacity);
-        ssdStorage = new SSDStorage(ssdCapacity);
-    }
+    /**
+     * The ssd provisioner for hdfs.
+     */
+    private StorageProvisionerForHDFS ssdProvisioner;
 
-//    public boolean addBlocktoHDDStorage(Block block)
-//    {
-//        return hddStorage.addBlock(block);
-//    }
+    /**
+     * The hdd provisioner for hdfs.
+     */
+    private StorageProvisionerForHDFS hddProvisioner;
 
-//    public boolean addBlocktoSSDStorage(Block block)
-//    {
-//        return ssdStorage.addBlock(block);
-//    }
+    /**
+     * The bw provisioner for hdfs.
+     */
+    private BwProvisionerForHDFS bwProvisioner;
 
-    public boolean setDatacenter(HDFSDatacenter datacenter)
-    {
-        this.datacenter = datacenter;
-        return true;
-    }
+    private List<PeProvisionerForHDFS> peProvisionerList;
 
-    public Datacenter getDatacenter()
-    {
-        return this.datacenter;
+    public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum, double mips) {
+        this.datanode = datanode;
+        this.ssdProvisioner = new StorageProvisionerForHDFS(ssdMaxTransferRate);
+        this.hddProvisioner = new StorageProvisionerForHDFS(hddMaxTransferRate);
+        this.bwProvisioner = new BwProvisionerForHDFS(bw);
+        this.peProvisionerList = new ArrayList<>();
+        for(int i = 0; i < coreNum; i++)
+        {
+            peProvisionerList.add(new PeProvisionerForHDFS(mips));
+        }
     }
 }
