@@ -18,76 +18,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class Storage implements Serializable{
-	private int id = Id.pollId(this.getClass());
-	private double capacity;
-	private double usedSize;
-	private Map<Integer,Block> blockList;
-	private double maxTransferRate;
-	private Datanode datanode;
+public class Storage implements Serializable {
+    private int id = Id.pollId(this.getClass());
+    private double capacity;
+    private double usedSize;
+    private Map<Integer, Block> blockList;
+    private double maxTransferRate;
+    private Datanode datanode;
 
-	public Storage(int id, double capacity)
-	{
-		this.id = id;
-		this.capacity = capacity;
-		this.usedSize = 0;
-		this.blockList = new HashMap<>();
-		this.maxTransferRate = 0;
-	}
+    public Storage(Datanode datanode, double maxTransferRate, double capacity) {
+        this.capacity = capacity;
+        this.usedSize = 0;
+        this.blockList = new HashMap<>();
+        this.maxTransferRate = maxTransferRate;
+        this.datanode = datanode;
+    }
 
-	public Storage(int id, double capacity, Datanode datanode)
-	{
-		this.id = id;
-		this.capacity = capacity;
-		this.usedSize = 0;
-		this.blockList = new HashMap<>();
-		this.maxTransferRate = 0;
-		this.datanode = datanode;
-	}
+    public double getMaxTransferRate() {
+        return maxTransferRate;
+    }
 
-	public double getMaxTransferRate() {
-		return maxTransferRate;
-	}
+    public void setMaxTransferRate(double maxTransferRate) {
+        this.maxTransferRate = maxTransferRate;
+    }
 
-	public void setMaxTransferRate(double maxTransferRate) {
-		this.maxTransferRate = maxTransferRate;
-	}
+    public void addBlock(Block block) {
+        this.blockList.put(block.getId(), block);
+        block.setStorage(this);
+        usedSize += block.getSize();
+    }
 
-	public void addBlock(Block block)
-	{
-		this.blockList.put(block.getId(),block);
-		block.setStorage(this);
-		usedSize += block.getSize();
-	}
+    public boolean isFull(Block block) {
+        if (this.usedSize + block.getSize() <= this.capacity) {
+            return false;
+        }
+        return true;
+    }
 
-	public boolean isFull(Block block)
-	{
-		if(this.usedSize + block.getSize() <= this.capacity)
-		{
-			return false;
-		}
-		return true;
-	}
+    public boolean isContainBlock(int id) {
+        if (this.blockList.containsKey(id)) {
+            return true;
+        }
+        return false;
+    }
 
-	public boolean isContainBlock(int id)
-	{
-		if(this.blockList.containsKey(id))
-		{
-			return true;
-		}
-		return false;
-	}
+    public Datanode getDatanode() {
+        return datanode;
+    }
 
-	public Datanode getDatanode() {
-		return datanode;
-	}
+    public void setDatanode(Datanode datanode) {
+        this.datanode = datanode;
+    }
 
-	public void setDatanode(Datanode datanode) {
-		this.datanode = datanode;
-	}
-
-	public double getUsedSize()
-	{
-		return this.usedSize;
-	}
+    public double getUsedSize() {
+        return this.usedSize;
+    }
 }

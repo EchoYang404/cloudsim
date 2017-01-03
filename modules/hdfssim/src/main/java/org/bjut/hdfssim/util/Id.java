@@ -1,8 +1,6 @@
 package org.bjut.hdfssim.util;
 import org.bjut.hdfssim.Block;
-import org.bjut.hdfssim.HDDStorage;
 import org.bjut.hdfssim.HFile;
-import org.bjut.hdfssim.SSDStorage;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
