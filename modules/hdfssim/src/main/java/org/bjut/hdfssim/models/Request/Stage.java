@@ -4,11 +4,11 @@ public class Stage {
     private double length;
     private double restLength;
 
-    private double startTime = -1;
-    private double finishedTime = -1;
+    private double nextStartTime = Double.MAX_VALUE;
+    private double finishedTime = Double.MAX_VALUE;
+    private double predictTime = Double.MAX_VALUE;
 
     private boolean isFinished = false;
-
     public Stage(double length)
     {
         this.length = length;
@@ -17,24 +17,24 @@ public class Stage {
 
     public void start(double time)
     {
-        this.startTime = time;
+        this.nextStartTime = time;
     }
 
     public void excute(double time, double speed)
     {
         if(isFinished) return;
 
-        double t = time - startTime;
-        if(t * speed > restLength)
+        double t = time - nextStartTime;
+        if(t * speed >= restLength || restLength < 0.1)
         {
-            finishedTime = startTime + restLength / speed;
+            finishedTime = nextStartTime + restLength / speed;
             restLength = 0;
             isFinished = true;
         }
         else
         {
              restLength -= t * speed;
-             startTime = time;
+             nextStartTime = time;
         }
     }
 
@@ -46,7 +46,17 @@ public class Stage {
         return finishedTime;
     }
 
-    public double getStartTime() {
-        return startTime;
+    public double getNextStartTime() {
+        return nextStartTime;
+    }
+
+    public void tryExcute(double speed)
+    {
+        if(isFinished) return;
+        predictTime = nextStartTime + restLength / speed;
+    }
+
+    public double getPredictTime() {
+        return predictTime;
     }
 }

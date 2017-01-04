@@ -3,12 +3,13 @@ package org.bjut.hdfssim;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.util.Id;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HFile {
+public class HFile implements Serializable {
     private Integer id = Id.pollId(this.getClass());
     private double size;
     private Map<Integer, List<Block>> blockList; // blockId, List<Block>

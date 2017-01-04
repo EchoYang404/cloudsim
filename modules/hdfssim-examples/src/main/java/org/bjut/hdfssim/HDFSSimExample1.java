@@ -1,13 +1,9 @@
 package org.bjut.hdfssim;
 
-import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
-import org.bjut.hdfssim.util.Id;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
-
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 

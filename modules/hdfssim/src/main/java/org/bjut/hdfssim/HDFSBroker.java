@@ -1,5 +1,6 @@
 package org.bjut.hdfssim;
 
+import com.sun.org.apache.regexp.internal.RE;
 import org.bjut.hdfssim.models.Request.Request;
 import org.cloudbus.cloudsim.DatacenterBroker;
 import org.cloudbus.cloudsim.Log;
@@ -30,7 +31,11 @@ public class HDFSBroker extends DatacenterBroker{
 
     public void submitRequests(List<Request> requestList)
     {
-        this.requestList.addAll(requestList);
+        for(Request r : requestList)
+        {
+            r.setBroker(this);
+            this.requestList.add(r);
+        }
     }
 
 

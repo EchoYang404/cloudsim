@@ -4,12 +4,10 @@ import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 import org.bjut.hdfssim.provisioners.ProvisionerForHDFS;
 
-import javax.xml.crypto.Data;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
-public class HDFSHost {
+public class HDFSHost implements Serializable {
     /**
      * The id of the HDFSHost.
      */
@@ -38,27 +36,25 @@ public class HDFSHost {
      */
     private ProvisionerForHDFS bwProvisioner;
 
+    /**
+     * The net provisioner for hdfs.
+     */
+    private ProvisionerForHDFS netProvisioner;
+
     private List<ProvisionerForHDFS> peProvisionerList;
 
     public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum, double mips) {
+        this.id = datanode.getId();
         this.datanode = datanode;
         this.ssdProvisioner = new ProvisionerForHDFS(ssdMaxTransferRate, ReadCloudlet.DISK);
         this.hddProvisioner = new ProvisionerForHDFS(hddMaxTransferRate, ReadCloudlet.DISK);
         this.bwProvisioner = new ProvisionerForHDFS(bw, ReadCloudlet.BW);
+        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"), ReadCloudlet.NET);
         this.peProvisionerList = new ArrayList<>();
         for (int i = 0; i < coreNum; i++) {
             peProvisionerList.add(new ProvisionerForHDFS(mips, ReadCloudlet.CPU));
         }
-    }
-
-    public double excuteCloudlets(double time) {
-        // excute all cpus
-        Iterator<ProvisionerForHDFS> iterator = peProvisionerList.iterator();
-        for (ProvisionerForHDFS provisioner : peProvisionerList) {
-            provisioner.excuteCloudlets(time);
-        }
-
-        return 0;
+        this.finishedList = new ArrayList<>();
     }
 
     public void addCloudLet(double time, ReadCloudlet cloudlet) {
@@ -68,49 +64,137 @@ public class HDFSHost {
         for (ProvisionerForHDFS provisioner : peProvisionerList) {
             if (provisioner.getCurrentNum() < minCPUNum) {
                 pe = provisioner;
-                // TODO 为方便测试注释
-                break;
-                //minCPUNum = provisioner.getCurrentNum();
+                minCPUNum = provisioner.getCurrentNum();
             }
         }
-        List<ReadCloudlet> finishedCPUList = pe.getFinishedCloudLets(time);
         pe.addCloudlet(cloudlet, time);
-        excuteFinishedCPUCloudlets(time, finishedCPUList);
-
     }
 
-    private void excuteFinishedCPUCloudlets(double time, List<ReadCloudlet> finishedCPUList) {
-        Iterator<ReadCloudlet> iterator = finishedCPUList.iterator();
+    public SortedSet<ReadCloudlet> excuteCloudlets(double time) {
+
+        SortedSet<ReadCloudlet> completeList = new TreeSet<>();
+        // excute all cpus cloudlets
+        for (ProvisionerForHDFS provisioner : peProvisionerList) {
+            completeList.addAll(provisioner.excuteCloudlets(time));
+        }
+        Iterator<ReadCloudlet> iterator = completeList.iterator();
         while (iterator.hasNext()) {
-            ReadCloudlet cloudlet = iterator.next();
-            double startTime = cloudlet.getCurrentStage().getFinishedTime();
-            cloudlet.toNextStage();
-            cloudlet.getCurrentStage().start(startTime);
+            ReadCloudlet c = iterator.next();
+            excuteFinishedCPUCloudlet(c);
+            completeList.remove(c);
+        }
+        // excute all disk cloudlets
+        completeList.addAll(ssdProvisioner.excuteCloudlets(time));
+        completeList.addAll(hddProvisioner.excuteCloudlets(time));
+        iterator = completeList.iterator();
+        while (iterator.hasNext()) {
+            ReadCloudlet c = iterator.next();
+            excuteFinishedDiskCloudlet(c);
+            completeList.remove(c);
+        }
 
-            int type = cloudlet.getHost().datanode.getStorageTypeByBlockId(cloudlet.getBlockId());
+        // excute all bw cloudlets
+        completeList.addAll(bwProvisioner.excuteCloudlets(time));
 
-            ProvisionerForHDFS provisioner = null;
-            if (type == Storage.SSD) {
-                provisioner = ssdProvisioner;
-            } else {
-                provisioner = hddProvisioner;
+        iterator = completeList.iterator();
+        while (iterator.hasNext()) {
+            ReadCloudlet c = iterator.next();
+            if (c.getMaxStage() == ReadCloudlet.NET) {
+                excuteFinishedBwCloudlet(c);
+                completeList.remove(c);
             }
-
-            List<ReadCloudlet> finishedDiskList = provisioner.getFinishedCloudLets(time);
-            provisioner.addCloudlet(cloudlet, time);
-            excuteFinishedCPUCloudlets(time, finishedDiskList);
         }
+
+        completeList.addAll(netProvisioner.excuteCloudlets(time));
+        completeList.addAll(this.finishedList);
+        this.finishedList.clear();
+        return completeList;
     }
 
-    private void excuteFinishedDiskCloudlets(double time, List<ReadCloudlet> finishedDiskList) {
-        Iterator<ReadCloudlet> iterator = finishedDiskList.iterator();
-        while (iterator.hasNext()) {
-            ReadCloudlet cloudlet = iterator.next();
-            double startTime = cloudlet.getCurrentStage().getFinishedTime();
-            cloudlet.toNextStage();
-            cloudlet.getCurrentStage().start(startTime);
-            this.finishedList.addAll(bwProvisioner.getFinishedCloudLets(time));
-            bwProvisioner.addCloudlet(cloudlet, time);
+    private void excuteFinishedCPUCloudlet(ReadCloudlet cloudlet) {
+        // 下一阶段的开始时间
+        double startTime = cloudlet.getCurrentStage().getFinishedTime();
+        // block所在磁盘介质类型
+        int type = cloudlet.getHost().datanode.getStorageTypeByBlockId(cloudlet.getBlockId());
+        ProvisionerForHDFS provisioner;
+        if (type == Storage.SSD) {
+            provisioner = ssdProvisioner;
+        } else {
+            provisioner = hddProvisioner;
         }
+
+        // 下一阶段开始前，执行所有任务
+        SortedSet<ReadCloudlet> finishedDiskList = provisioner.excuteCloudlets(startTime);
+        // 对下一阶段开始前完成的所有任务执行磁盘任务
+        for (ReadCloudlet c : finishedDiskList) {
+            excuteFinishedDiskCloudlet(c);
+        }
+
+        // 任务跳转至下下一阶段，并添加至provisioner中
+        cloudlet.toNextStage();
+        cloudlet.getCurrentStage().start(startTime);
+        provisioner.addCloudlet(cloudlet, startTime);
+
+
+    }
+
+    private void excuteFinishedDiskCloudlet(ReadCloudlet cloudlet) {
+        // 下一阶段的开始时间
+        double startTime = cloudlet.getCurrentStage().getFinishedTime();
+        // 下一阶段开始前，执行所有任务
+        SortedSet<ReadCloudlet> finishedBwList = bwProvisioner.excuteCloudlets(startTime);
+        for (ReadCloudlet c : finishedBwList) {
+            excuteFinishedBwCloudlet(c);
+        }
+
+        // 任务跳转至下下一阶段，并添加至provisioner中
+        cloudlet.toNextStage();
+        cloudlet.getCurrentStage().start(startTime);
+        bwProvisioner.addCloudlet(cloudlet, startTime);
+
+    }
+
+    private void excuteFinishedBwCloudlet(ReadCloudlet cloudlet) {
+        // 下一阶段的开始时间
+        double startTime = cloudlet.getCurrentStage().getFinishedTime();
+        // 下一阶段开始前，执行所有任务
+        finishedList.addAll(netProvisioner.excuteCloudlets(startTime));
+
+        // 任务跳转至下下一阶段，并添加至provisioner中
+        cloudlet.toNextStage();
+        cloudlet.getCurrentStage().start(startTime);
+        netProvisioner.addCloudlet(cloudlet, startTime);
+    }
+
+
+    public ReadCloudlet tryExcuteCloudlets() {
+        ReadCloudlet result = null;
+        for (ProvisionerForHDFS p : peProvisionerList) {
+            result = tryExcute(p, result);
+        }
+        result = tryExcute(ssdProvisioner, result);
+        result = tryExcute(hddProvisioner, result);
+        result = tryExcute(bwProvisioner, result);
+        result = tryExcute(netProvisioner,result);
+
+        return result;
+    }
+
+    private ReadCloudlet tryExcute(ProvisionerForHDFS p, ReadCloudlet result) {
+        double time;
+        if (result == null) {
+            time = Double.MAX_VALUE;
+        } else {
+            time = result.getCurrentStage().getPredictTime();
+        }
+        ReadCloudlet tmp = p.tryExcute();
+        if (tmp != null && tmp.getCurrentStage().getPredictTime() < time) {
+            result = tmp;
+        }
+        return result;
+    }
+
+    public Datanode getDatanode() {
+        return datanode;
     }
 }

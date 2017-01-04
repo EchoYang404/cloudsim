@@ -281,6 +281,8 @@ public class CloudSimTags {
 
 	public static final int RequestCreate = HDFSBASE + 2;
 
+	public static final int RequestExcute = HDFSBASE + 3;
+
 	/** Private Constructor. */
 	private CloudSimTags() {
 		throw new UnsupportedOperationException("CloudSimTags cannot be instantiated");
