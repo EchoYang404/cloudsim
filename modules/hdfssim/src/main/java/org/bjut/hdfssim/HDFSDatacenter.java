@@ -1,43 +1,76 @@
 package org.bjut.hdfssim;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.models.HDFS.Namenode;
+import org.bjut.hdfssim.models.Request.Request;
 import org.cloudbus.cloudsim.*;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEntity;
+import org.cloudbus.cloudsim.core.SimEvent;
 
-public class HDFSDatacenter extends Datacenter{
+public class HDFSDatacenter extends SimEntity{
 
-    private List<HDFSHost> hostList;
+    public Namenode namenode;
+    public Map<Integer,HDFSHost> hostList; // datanodeId, HDFSHost
+    /** The last time some cloudlet was processed in the datacenter. */
+    private double lastProcessTime;
+    private DatanodeAllocationPolicy policy;
 
-    /**
-     * Allocates a new Datacenter object.
-     *
-     * @param name               the name to be associated with this entity (as required by the super class)
-     * @param characteristics    the characteristics of the datacenter to be created
-     * @param vmAllocationPolicy the policy to be used to allocate VMs into hosts
-     * @param storageList        a List of storage elements, for data simulation
-     * @param schedulingInterval the scheduling delay to process each datacenter received event
-     * @throws Exception when one of the following scenarios occur:
-     *                   <ul>
-     *                   <li>creating this entity before initializing CloudSim package
-     *                   <li>this entity name is <tt>null</tt> or empty
-     *                   <li>this entity has <tt>zero</tt> number of PEs (Processing Elements). <br/>
-     *                   No PEs mean the Cloudlets can't be processed. A CloudResource must contain
-     *                   one or more Machines. A Machine must contain one or more PEs.
-     *                   </ul>
-     * @pre name != null
-     * @pre resource != null
-     * @post $none
-     */
-    public HDFSDatacenter(String name, DatacenterCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy, List<org.cloudbus.cloudsim.Storage> storageList, double schedulingInterval) throws Exception {
-        super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
-        hostList = new ArrayList<>();
+    public HDFSDatacenter(String name, Namenode namenode, DatanodeAllocationPolicy policy) {
+        super(name);
+        this.namenode = namenode;
+        this.hostList = namenode.getHDFSHostList();
+        this.policy = policy;
     }
 
-    public boolean addHost(HDFSHost hdfsHost)
+    @Override
+    public void startEntity() {
+        int gisID = CloudSim.getCloudInfoServiceEntityId();
+        sendNow(gisID, CloudSimTags.REGISTER_RESOURCE, getId());
+    }
+
+    @Override
+    public void shutdownEntity() {
+
+    }
+
+    @Override
+    public void processEvent(SimEvent ev) {
+        switch (ev.getTag()) {
+            // 处理提交的Request
+            case CloudSimTags.RequestCreate:
+                processRequestCreate(ev);
+                break;
+        }
+    }
+
+    protected void processRequestCreate(SimEvent ev)
     {
-        hostList.add(hdfsHost);
-        hdfsHost.setDatacenter(this);
-        return true;
+        Request request = (Request)ev.getData();
+        if(request.isFinished()) return;
+
+        request.start(CloudSim.clock());
+        Datanode datanode = policy.getDatanode(request.getCurrentReadCloudlet().getBlockList(),request.getAddr());
+        datanode.getHost().addCloudLet(CloudSim.clock(),request.getCurrentReadCloudlet());
+    }
+
+    protected void updateCloudletProcessing()
+    {
+
+    }
+
+
+    public double getLastProcessTime() {
+        return lastProcessTime;
+    }
+
+    public void setLastProcessTime(double lastProcessTime) {
+        this.lastProcessTime = lastProcessTime;
     }
 }

@@ -215,8 +215,7 @@ public class DatacenterBroker extends SimEntity {
 	/**
 	 * Process the ack received due to a request for VM creation.
 	 * 
-	 * @param ev a SimEvent object
-	 * @pre ev != null
+	 * @param ev a SimEvent objectdj
 	 * @post $none
 	 */
 	protected void processVmCreate(SimEvent ev) {

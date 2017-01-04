@@ -2,6 +2,7 @@ package org.bjut.hdfssim;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
+import org.cloudbus.cloudsim.core.CloudSimTags;
 
 import javax.xml.crypto.Data;
 import java.io.FileOutputStream;
@@ -12,6 +13,9 @@ import java.util.*;
 public class HDFSExample0 {
 
     public static void main(String[] args) {
+
+        CloudSimTags.printTags();
+
         // First step : Create namenode
         Namenode namenode = new Namenode();
         // Second step : Create datanodes from Config Files

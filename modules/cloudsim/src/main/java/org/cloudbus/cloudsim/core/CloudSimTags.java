@@ -10,6 +10,8 @@ package org.cloudbus.cloudsim.core;
 
 import org.cloudbus.cloudsim.Datacenter;
 
+import java.lang.reflect.Field;
+
 /**
  * Contains various static command tags that indicate a type of action that needs to be undertaken
  * by CloudSim entities when they receive or send events. <b>NOTE:</b> To avoid conflicts with other
@@ -29,6 +31,9 @@ public class CloudSimTags {
 
 	/** Starting constant value for network-related tags. **/
 	private static final int NETBASE = 100;
+
+	/** Starting constant value for hdfs-related tags. **/
+	private static final int HDFSBASE = 200;
 
 	/** Denotes boolean <tt>true</tt> in <tt>int</tt> value. */
 	public static final int TRUE = 1;
@@ -272,9 +277,52 @@ public class CloudSimTags {
 
 	public static final int NextCycle = BASE + 48;
 
+	public static final int SubmitRequests = HDFSBASE + 1;
+
+	public static final int RequestCreate = HDFSBASE + 2;
+
 	/** Private Constructor. */
 	private CloudSimTags() {
 		throw new UnsupportedOperationException("CloudSimTags cannot be instantiated");
 	}
 
+	public static final String getTagName (int value) {
+		Class c = null;
+		try {
+			c = Class.forName("org.cloudbus.cloudsim.core.CloudSimTags");
+			Field[] fields = c.getDeclaredFields();
+			for( Field field : fields ){
+				if(field.getType().toString().equals("int") && field.getInt(c)== value)
+				{
+					return field.getName();
+				}
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static final String printTags () {
+		Class c = null;
+		try {
+			c = Class.forName("org.cloudbus.cloudsim.core.CloudSimTags");
+			Field[] fields = c.getDeclaredFields();
+			for( Field field : fields ){
+				if(field.getType().toString().equals("int") )
+				{
+					System.out.println(field.getInt(c) + "," + field.getName());
+				}
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
 }

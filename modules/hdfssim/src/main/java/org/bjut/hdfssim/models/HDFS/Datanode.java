@@ -72,4 +72,18 @@ public class Datanode implements Serializable {
     public HDFSHost getHost() {
         return host;
     }
+
+    public int getDistance(Datanode datanode)
+    {
+        if(this.getId() == this.getId()) return 0;
+        if(this.getRackId() == datanode.getRackId()) return 2;
+        return 4;
+    }
+
+    public int getStorageTypeByBlockId(int blockId)
+    {
+        if(ssdStorage.hasBlock(blockId)) return Storage.SSD;
+        if(hddStorage.hasBlock(blockId)) return Storage.HDD;
+        return -1;
+    }
 }

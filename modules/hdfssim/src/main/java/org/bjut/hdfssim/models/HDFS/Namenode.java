@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
+import org.bjut.hdfssim.models.Request.Request;
 import org.bjut.hdfssim.util.HDFSConfig;
+import org.bjut.hdfssim.util.Id;
 
 import javax.xml.crypto.Data;
 import java.io.FileNotFoundException;
@@ -18,7 +20,8 @@ public class Namenode implements Serializable {
     private List<HFile> HFileList = new ArrayList<>();
     private Map<Integer, List<Datanode>> datanodeList = new HashMap<>(); // Map<rackId, List<datanode>>
 
-    public Namenode() {}
+    public Namenode() {
+    }
 
     public double getBlockSize() {
         return blockSize;
@@ -39,6 +42,7 @@ public class Namenode implements Serializable {
     public List<HFile> getHFileList() {
         return HFileList;
     }
+
     public Map<Integer, List<Datanode>> getDatanodeList() {
         return datanodeList;
     }
@@ -60,7 +64,8 @@ public class Namenode implements Serializable {
         }
         for (HFile file : HFileList) {
             for (List<Block> replicaList : file.getBlockList().values()) {
-                while(!uploadReplica(replicaList)){}
+                while (!uploadReplica(replicaList)) {
+                }
             }
         }
     }
@@ -84,7 +89,8 @@ public class Namenode implements Serializable {
         // add rest blocks
 
         while (blockIterator.hasNext()) {
-            while(notAvailbleRack == (rackId = random.nextInt(rackCount))){}
+            while (notAvailbleRack == (rackId = random.nextInt(rackCount))) {
+            }
             if (uploadBlockToRack(blockIterator.next(), rackId)) {
                 successNum++;
             }
@@ -132,8 +138,7 @@ public class Namenode implements Serializable {
         return null;
     }
 
-    public Map<Integer, HDFSHost> getHDFSHostList()
-    {
+    public Map<Integer, HDFSHost> getHDFSHostList() {
         if (this.datanodeList.isEmpty()) {
             try {
                 throw new Exception("HDFSHostList is empty!");
@@ -143,21 +148,18 @@ public class Namenode implements Serializable {
         }
         Map<Integer, HDFSHost> HDFSHostList = new HashMap<>();
         Iterator<Map.Entry<Integer, List<Datanode>>> entries = this.datanodeList.entrySet().iterator();
-        while(entries.hasNext())
-        {
+        while (entries.hasNext()) {
             Map.Entry<Integer, List<Datanode>> entry = entries.next();
             Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
-            while(datanodeIterator.hasNext())
-            {
+            while (datanodeIterator.hasNext()) {
                 Datanode datanode = datanodeIterator.next();
-                HDFSHostList.put(datanode.getId(),datanode.getHost());
+                HDFSHostList.put(datanode.getId(), datanode.getHost());
             }
         }
         return HDFSHostList;
     }
 
-    public void createDatanodeFromConfig(String path)
-    {
+    public void createDatanodeFromConfig(String path) {
         Gson gson = new Gson();
         try {
             FileReader fr = new FileReader(path);
@@ -179,4 +181,22 @@ public class Namenode implements Serializable {
         }
         uploadFiles();
     }
+
+    public List<Request> createRequestListByRandom(int requestCount) {
+        List<Request> requestList = new ArrayList<>();
+        int rackCount = this.datanodeList.size();
+        int fileCount = this.HFileList.size();
+        // TODO 读取请求均匀到达
+        double submitTime = 0;
+
+        Random random = new Random();
+        for (int i = 0; i < requestCount; i++) {
+            // TODO file应当随机 random.nextInt(fileCount)
+            requestList.add(new Request(getRandomDatanodeIdByRack(random.nextInt(rackCount)), this.HFileList.get(0), submitTime));
+            submitTime += 2;
+        }
+
+        return requestList;
+    }
+
 }

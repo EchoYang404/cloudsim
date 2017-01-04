@@ -22,9 +22,12 @@ public class Storage implements Serializable {
     private int id = Id.pollId(this.getClass());
     private double capacity;
     private double usedSize;
-    private Map<Integer, Block> blockList;
+    private Map<Integer, Block> blockList; // blockId, Block
     private double maxTransferRate;
     private Datanode datanode;
+
+    public static final int SSD = 0;
+    public static final int HDD = 1;
 
     public Storage(Datanode datanode, double maxTransferRate, double capacity) {
         this.capacity = capacity;
@@ -72,5 +75,14 @@ public class Storage implements Serializable {
 
     public double getUsedSize() {
         return this.usedSize;
+    }
+
+    public boolean hasBlock(int blockId)
+    {
+        if(blockList.containsKey(blockId))
+        {
+            return true;
+        }
+        return false;
     }
 }
