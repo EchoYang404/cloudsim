@@ -5,7 +5,7 @@ import org.bjut.hdfssim.util.Id;
 import java.io.Serializable;
 import java.util.*;
 
-public class Block implements Serializable{
+public class Block implements Serializable {
     private HFile hFile;
     private int id;
     private double size;
@@ -13,8 +13,7 @@ public class Block implements Serializable{
     private boolean isMigrate;
     private Storage storage;
 
-    public Block(HFile hFile,int id,double size)
-    {
+    public Block(HFile hFile, int id, double size) {
         this.hFile = hFile;
         this.id = id;
         this.size = size;
@@ -36,12 +35,10 @@ public class Block implements Serializable{
         return storage;
     }
 
-    public int getTotalNumOfRack()
-    {
+    public int getTotalNumOfRack() {
         Iterator<Block> blockIterator = hFile.getReplicaListById(this.id).iterator();
         Set<Integer> racks = new HashSet<>();
-        while(blockIterator.hasNext())
-        {
+        while (blockIterator.hasNext()) {
             racks.add(blockIterator.next().getStorage().getDatanode().getRackId());
         }
         return racks.size();

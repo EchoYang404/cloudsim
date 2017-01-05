@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 public class HFile implements Serializable {
-    private Integer id = Id.pollId(this.getClass());
+    private Integer id;
     private double size;
     private Map<Integer, List<Block>> blockList; // blockId, List<Block>
     private Namenode namenode;
 
     public HFile(double size, Namenode namenode) {
+        this.id = Id.pollId(this.getClass());
         this.size = size;
         blockList = new HashMap<>();
         this.namenode = namenode;

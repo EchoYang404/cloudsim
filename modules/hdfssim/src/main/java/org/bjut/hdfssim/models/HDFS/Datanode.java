@@ -3,23 +3,27 @@ package org.bjut.hdfssim.models.HDFS;
 import org.bjut.hdfssim.*;
 import org.bjut.hdfssim.util.Id;
 
+import javax.xml.crypto.Data;
 import java.io.Serializable;
 import java.util.Random;
 
 public class Datanode implements Serializable {
-    private int id = Id.pollId(Datanode.class);
+    private int id;
     private int rackId;
     private Storage hddStorage;
     private Storage ssdStorage;
     private HDFSHost host;
 
+    public Datanode() {
+    }
+
     public Datanode(int rackId, double hddCapacity, double hddMaxTransferRate, double ssdCapacity, double ssdMaxTransferRate, double bw, int coreNum, double mips) {
+        this.id = Id.pollId(Datanode.class);
         this.rackId = rackId;
         this.hddStorage = new Storage(this, hddMaxTransferRate, hddCapacity);
         this.ssdStorage = new Storage(this, ssdMaxTransferRate, ssdCapacity);
         this.host = new HDFSHost(this, ssdMaxTransferRate, hddMaxTransferRate, bw, coreNum, mips);
     }
-
 
     public boolean addBlock(Block block) {
         if (isContainBlock(block.getId())) {
@@ -73,17 +77,15 @@ public class Datanode implements Serializable {
         return host;
     }
 
-    public int getDistance(Datanode datanode)
-    {
-        if(this.getId() == this.getId()) return 0;
-        if(this.getRackId() == datanode.getRackId()) return 2;
+    public int getDistance(Datanode datanode) {
+        if (this.getId() == this.getId()) return 0;
+        if (this.getRackId() == datanode.getRackId()) return 2;
         return 4;
     }
 
-    public int getStorageTypeByBlockId(int blockId)
-    {
-        if(ssdStorage.hasBlock(blockId)) return Storage.SSD;
-        if(hddStorage.hasBlock(blockId)) return Storage.HDD;
+    public int getStorageTypeByBlockId(int blockId) {
+        if (ssdStorage.hasBlock(blockId)) return Storage.SSD;
+        if (hddStorage.hasBlock(blockId)) return Storage.HDD;
         return -1;
     }
 }

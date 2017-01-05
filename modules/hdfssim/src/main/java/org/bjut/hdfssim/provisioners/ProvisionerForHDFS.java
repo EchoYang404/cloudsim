@@ -7,7 +7,6 @@ import java.util.*;
 
 public class ProvisionerForHDFS implements Serializable {
     private double capacity;
-
     private int currentNum;
     private final int type;
     // 正在运行的任务列表
@@ -76,5 +75,9 @@ public class ProvisionerForHDFS implements Serializable {
             }
         }
         return result;
+    }
+
+    public double getCapacity() {
+        return capacity;
     }
 }

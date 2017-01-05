@@ -175,7 +175,7 @@ public class HDFSHost implements Serializable {
         result = tryExcute(ssdProvisioner, result);
         result = tryExcute(hddProvisioner, result);
         result = tryExcute(bwProvisioner, result);
-        result = tryExcute(netProvisioner,result);
+        result = tryExcute(netProvisioner, result);
 
         return result;
     }
@@ -196,5 +196,48 @@ public class HDFSHost implements Serializable {
 
     public Datanode getDatanode() {
         return datanode;
+    }
+
+    // 返回未使用的CPU核数
+    public int getCpuUtilization() {
+        Iterator<ProvisionerForHDFS> iterator = peProvisionerList.iterator();
+        int num = 0;
+        while (iterator.hasNext()) {
+            int tmp = iterator.next().getCurrentNum();
+            if (tmp == 0) {
+                num++;
+            }
+        }
+        return num / peProvisionerList.size();
+    }
+
+    // 返回block所在存储介质的当前速度
+    public double getDiskUtilization(Block block) {
+        if (datanode.getStorageTypeByBlockId(block.getId()) == Storage.HDD) {
+            if (hddProvisioner.getCurrentNum() == 0) {
+                return hddProvisioner.getCapacity();
+            }
+            return hddProvisioner.getCapacity() / hddProvisioner.getCurrentNum();
+        }
+        if (ssdProvisioner.getCurrentNum() == 0) {
+            return ssdProvisioner.getCapacity();
+        }
+        return ssdProvisioner.getCapacity() / ssdProvisioner.getCurrentNum();
+    }
+
+    // 返回节点带宽的当前速度
+    public double getBwUtilization() {
+        if (bwProvisioner.getCurrentNum() == 0) {
+            return bwProvisioner.getCapacity();
+        }
+        return bwProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
+    }
+
+    // 返回网络带宽的当前速度
+    public double getNetUtilization() {
+        if (bwProvisioner.getCurrentNum() == 0) {
+            return ssdProvisioner.getCapacity();
+        }
+        return netProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
     }
 }
