@@ -18,6 +18,7 @@ public class DefaultDatanodeAllocationPolicy implements DatanodeAllocationPolicy
             if(addr.getDistance(block.getStorage().getDatanode()) < distance)
             {
                 datanode = block.getStorage().getDatanode();
+                distance = addr.getDistance(block.getStorage().getDatanode());
             }
         }
         return datanode;

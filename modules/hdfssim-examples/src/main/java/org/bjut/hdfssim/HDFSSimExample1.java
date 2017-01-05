@@ -24,7 +24,10 @@ public class HDFSSimExample1 {
             // Third step : Create files and upload files
             namenode.createHFileByRadom(1000, 1024, 2048);
 
-            HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new DefaultDatanodeAllocationPolicy());
+            //HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new DefaultDatanodeAllocationPolicy());
+
+            HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new LoadDatanodeAllocationPolicy());
+
 
             HDFSBroker hdfsBroker = new HDFSBroker("brocker", datacenter);
 
