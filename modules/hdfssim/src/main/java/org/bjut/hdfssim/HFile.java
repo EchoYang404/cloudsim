@@ -1,8 +1,8 @@
 package org.bjut.hdfssim;
 
 import org.bjut.hdfssim.models.HDFS.Namenode;
-import org.bjut.hdfssim.util.BlockConfig;
-import org.bjut.hdfssim.util.HFileConfig;
+import org.bjut.hdfssim.config.BlockConfig;
+import org.bjut.hdfssim.config.HFileConfig;
 import org.bjut.hdfssim.util.Id;
 
 import java.io.Serializable;
@@ -43,7 +43,7 @@ public class HFile implements Serializable {
     public HFile(double size, Namenode namenode) {
         this.id = Id.pollId(this.getClass());
         this.size = size;
-        blockList = new HashMap<>();
+        this.blockList = new HashMap<>();
         this.namenode = namenode;
         creatBlocks();
     }

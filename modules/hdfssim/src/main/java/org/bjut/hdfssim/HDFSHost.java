@@ -228,9 +228,11 @@ public class HDFSHost implements Serializable {
     // 返回节点带宽的当前速度
     public double getBwUtilization() {
         if (bwProvisioner.getCurrentNum() == 0) {
-            return bwProvisioner.getCapacity();
+            //return bwProvisioner.getCapacity();
+            return 1;
         }
-        return bwProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
+        //return bwProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
+        return 1 / bwProvisioner.getCurrentNum();
     }
 
     // 返回网络带宽的当前速度

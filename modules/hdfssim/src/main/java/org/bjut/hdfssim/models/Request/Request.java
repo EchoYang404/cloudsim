@@ -45,7 +45,6 @@ public class Request {
             Map.Entry<Integer, List<Block>> entry = entries.next();
             this.cloudletList.add(new ReadCloudlet(entry.getKey(), entry.getValue(), this));
         }
-
     }
 
     public ReadCloudlet getCurrentReadCloudlet() {
@@ -92,5 +91,12 @@ public class Request {
             this.finishedTime = this.cloudletList.get(currentCloudlet).getFinishedTime();
             return false;
         }
+    }
+    public HFile gethFile() {
+        return hFile;
+    }
+
+    public double getFinishedTime() {
+        return finishedTime;
     }
 }

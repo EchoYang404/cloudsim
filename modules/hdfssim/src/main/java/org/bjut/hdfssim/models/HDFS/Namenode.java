@@ -6,7 +6,7 @@ import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.Request.Request;
-import org.bjut.hdfssim.util.HDFSConfig;
+import org.bjut.hdfssim.config.HDFSConfig;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -226,22 +226,18 @@ public class Namenode implements Serializable {
         uploadFiles();
     }
 
-    public List<Request> createRequestListByRandom(int requestCount) {
-        List<Request> requestList = new ArrayList<>();
-        int rackCount = this.datanodeList.size();
-        int fileCount = this.HFileList.size();
-        // TODO 读取请求均匀到达
-        double submitTime = 0;
+    public List<Request> getRquestListFromConfigFile(String path)
+    {
+        Gson gson = new Gson();
+        try {
+            FileReader fr = new FileReader(path);
+            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            return config.getRequestList(this);
 
-        Random random = new Random();
-        for (int i = 0; i < requestCount; i++) {
-            // TODO file应当随机 random.nextInt(fileCount)
-            requestList.add(new Request(getRandomDatanodeIdByRack(random.nextInt(rackCount)), this.HFileList.get(0),
-                    submitTime));
-            submitTime += 2;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-
-        return requestList;
+        return null;
     }
 
     public void resetStorages() {
@@ -271,6 +267,20 @@ public class Namenode implements Serializable {
             throw new Exception("There is no datanode has id = " + datanodeId + "!!");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    public HFile getHFileById(int hFileId)
+    {
+        Iterator<HFile> iterator = this.HFileList.iterator();
+        while (iterator.hasNext())
+        {
+            HFile hFile = iterator.next();
+            if(hFile.getId() == hFileId)
+            {
+                return hFile;
+            }
         }
         return null;
     }

@@ -1,10 +1,9 @@
 package org.bjut.hdfssim.models.HDFS;
 
 import org.bjut.hdfssim.*;
-import org.bjut.hdfssim.util.DatanodeConfig;
+import org.bjut.hdfssim.config.DatanodeConfig;
 import org.bjut.hdfssim.util.Id;
 
-import javax.xml.crypto.Data;
 import java.io.Serializable;
 import java.util.Random;
 
