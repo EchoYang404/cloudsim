@@ -52,6 +52,13 @@ public class Storage implements Serializable {
         usedSize += block.getSize();
     }
 
+    public void deleteBlock(Block block)
+    {
+        this.blockList.remove(block.getId());
+        usedSize -= block.getSize();
+        block.setStorage(null);
+    }
+
     public boolean isFull(Block block) {
         if (this.usedSize + block.getSize() <= this.capacity) {
             return false;
@@ -83,5 +90,15 @@ public class Storage implements Serializable {
             return true;
         }
         return false;
+    }
+
+    public void reset()
+    {
+        this.usedSize = 0;
+        this.blockList.clear();
+    }
+
+    public double getCapacity() {
+        return capacity;
     }
 }

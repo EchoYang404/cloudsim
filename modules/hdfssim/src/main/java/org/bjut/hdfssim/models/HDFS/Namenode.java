@@ -6,9 +6,7 @@ import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.models.Request.Request;
 import org.bjut.hdfssim.util.HDFSConfig;
-import org.bjut.hdfssim.util.Id;
 
-import javax.xml.crypto.Data;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -117,7 +115,7 @@ public class Namenode implements Serializable {
 
     private void resetReplicaStorage(List<Block> replicaList) {
         for (Block block : replicaList) {
-            block.setStorage(null);
+            block.getStorage().deleteBlock(block);
         }
     }
 
@@ -159,7 +157,7 @@ public class Namenode implements Serializable {
         return HDFSHostList;
     }
 
-    public void createDatanodeFromConfig(String path) {
+    public void createDatanodeFromConfigFile(String path) {
         Gson gson = new Gson();
         try {
             FileReader fr = new FileReader(path);
@@ -169,7 +167,32 @@ public class Namenode implements Serializable {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
 
+    public void setDatanodesFromConfigFile(String path)
+    {
+        Gson gson = new Gson();
+        try {
+            FileReader fr = new FileReader(path);
+            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            config.setDatanodeList(this);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void setHFilesFromConfigFile(String path) {
+        Gson gson = new Gson();
+        try {
+            FileReader fr = new FileReader(path);
+            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            config.setHFileList(this);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void createHFileByRadom(int fileNum, int minSize, int maxSize) {
@@ -199,4 +222,41 @@ public class Namenode implements Serializable {
         return requestList;
     }
 
+    public void resetStorages()
+    {
+        Iterator<List<Datanode>> listIterator = this.datanodeList.values().iterator();
+        while (listIterator.hasNext())
+        {
+            Iterator<Datanode> iterator = listIterator.next().iterator();
+            while(iterator.hasNext())
+            {
+                Datanode datanode = iterator.next();
+                datanode.resetStorages();
+            }
+        }
+    }
+
+    public void addHFile(HFile hFile)
+    {
+        this.HFileList.add(hFile);
+    }
+
+    public Datanode getDatanodeByRackIdAndDatanodeId(int rackId, int datanodeId)
+    {
+        Iterator<Datanode> iterator = this.datanodeList.get(rackId).iterator();
+        while (iterator.hasNext())
+        {
+            Datanode datanode = iterator.next();
+            if(datanode.getId() == datanodeId)
+            {
+                return datanode;
+            }
+        }
+        try {
+            throw new Exception("There is no datanode has id = " + datanodeId + "!!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

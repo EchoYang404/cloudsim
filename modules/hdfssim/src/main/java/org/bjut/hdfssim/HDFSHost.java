@@ -240,4 +240,20 @@ public class HDFSHost implements Serializable {
         }
         return netProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
     }
+
+    public double getBw()
+    {
+        return this.bwProvisioner.getCapacity();
+    }
+
+    public int getCoreNum()
+    {
+        return this.peProvisionerList.size();
+    }
+
+    public double getMips()
+    {
+        return this.peProvisionerList.get(0).getCapacity();
+    }
 }
+
