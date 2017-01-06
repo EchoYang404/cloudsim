@@ -1,10 +1,11 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim.config;
 
 import com.google.gson.Gson;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.DatanodeType;
 import org.bjut.hdfssim.models.HDFS.Namenode;
+import org.bjut.hdfssim.models.Request.Request;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 
 public class HDFSConfig {
@@ -22,12 +24,16 @@ public class HDFSConfig {
     private List<DatanodeConfig> datanodeConfigList;
     private List<HFileConfig> fileConfigList;
 
+    private List<RequestConfig> requestConfigList;
+
     public HDFSConfig() {
         datanodeTypeList = new ArrayList<>();
         rackConfigList = new ArrayList<>();
 
         datanodeConfigList = new ArrayList<>();
         fileConfigList = new ArrayList<>();
+
+        requestConfigList = new ArrayList<>();
     }
 
     // 根据 DatanodeType与RackConfig 创建Datanode并添加至namenode
@@ -82,6 +88,36 @@ public class HDFSConfig {
         }
     }
 
+    // 根据namenode中已有的Datanode与HFile，创建RequestConfig
+    public void setRequestConfigList(Namenode namenode, int requestCount) {
+        //List<Request> requestList = new ArrayList<>();
+        int rackCount = namenode.getDatanodeList().size();
+        int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
+        // TODO 读取请求均匀到达
+        double submitTime = 0;
+
+        Random random = new Random();
+        for (int i = 0; i < requestCount; i++) {
+            int rackId = random.nextInt(rackCount);
+            this.requestConfigList.add(new RequestConfig(submitTime, rackId, namenode.getRandomDatanodeIdByRack
+                    (rackId).getId(), 1 + random.nextInt(fileCount)));
+            submitTime += 2;
+        }
+    }
+
+    public List<Request> getRequestList(Namenode namenode) {
+        List<Request> requestList = new ArrayList<>();
+        Iterator<RequestConfig> iterator = this.requestConfigList.iterator();
+        while (iterator.hasNext()) {
+            RequestConfig rc = iterator.next();
+
+            Datanode datanode = namenode.getDatanodeByRackIdAndDatanodeId(rc.getRackId(), rc.getDatanodeId());
+            HFile hFile = namenode.getHFileById(rc.getHfileId());
+            requestList.add(new Request(datanode, hFile, rc.getSubmitTime()));
+        }
+        return requestList;
+    }
+
     // 将所有配置信息写入至json文件中
     public void writeToFile(String path) {
         Gson gson = new Gson();
@@ -93,7 +129,6 @@ public class HDFSConfig {
             e.printStackTrace();
         }
     }
-
 
     public List<DatanodeType> getDatanodeTypeList() {
         return datanodeTypeList;

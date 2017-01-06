@@ -1,4 +1,4 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim.config;
 
 import org.bjut.hdfssim.Configuration;
 import org.bjut.hdfssim.models.HDFS.DatanodeType;
@@ -22,14 +22,16 @@ public class CreateConfig {
         configRacks(config);
         config.writeToFile(path);
 
-        // Create datanodes from Config File and write to json file
+        // Create datanodes from Config File
         namenode.createDatanodeFromConfigFile(path);
         config.setDatanodeConfigList(namenode);
-        config.writeToFile(path);
 
         // Create HFiles by random and write to json file
-        namenode.createHFileByRadom(1000,1024,2048);
+        namenode.createHFileByRadom(100,1024,2048);
         config.setHFileConfigList(namenode);
+
+        // Create request by random and write to json file
+        config.setRequestConfigList(namenode,100);
         config.writeToFile(path);
     }
 

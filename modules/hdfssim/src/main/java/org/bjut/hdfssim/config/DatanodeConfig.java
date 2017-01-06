@@ -1,4 +1,4 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim.config;
 
 import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.HDFS.Datanode;

@@ -1,4 +1,4 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim.config;
 
 public class RackConfig {
     private int rackId;

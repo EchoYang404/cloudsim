@@ -1,4 +1,4 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim.config;
 
 import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HFile;
