@@ -37,22 +37,46 @@ public class Datanode implements Serializable {
     }
 
 
-    public boolean addBlock(Block block) {
+    public int addBlock(Block block) {
         if (isContainBlock(block.getId())) {
-            return false;
+            return -1;
         }
         Random random = new Random();
         if (random.nextInt(100) > 50) {
             if (!ssdStorage.isFull(block)) {
                 ssdStorage.addBlock(block);
-                return true;
+                return Storage.SSD;
             }
         }
         if (!hddStorage.isFull(block)) {
             hddStorage.addBlock(block);
-            return true;
+            return Storage.HDD;
         }
-        return false;
+        return -1;
+    }
+
+    public int addBlockToStorage(Block block, int type) {
+
+        if (isContainBlock(block.getId())) {
+            return -1;
+        }
+        if(type == Storage.HDD)
+        {
+            if (!hddStorage.isFull(block)) {
+                hddStorage.addBlock(block);
+                return Storage.HDD;
+            }
+        }
+
+        if(type == Storage.SSD)
+        {
+            if (!ssdStorage.isFull(block)) {
+                ssdStorage.addBlock(block);
+                return Storage.SSD;
+            }
+        }
+        // 返回-1表示为添加失败
+        return -1;
     }
 
     public boolean isFull(Block block) {

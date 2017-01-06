@@ -29,11 +29,14 @@ public class HFile implements Serializable {
             List<Block> blockList = new ArrayList<>();
             while (iterator.hasNext()) {
                 BlockConfig blockConfig = iterator.next();
-                blockList.add(new Block(this, entry.getKey(), blockConfig.getSize(), namenode
+                Storage storage = namenode
                         .getDatanodeByRackIdAndDatanodeId(blockConfig.getRackId(), blockConfig.getDatanodeId())
-                        .getStorageByType(blockConfig.getStorageType())));
+                        .getStorageByType(blockConfig.getStorageType());
+                Block block = new Block(this, entry.getKey(), blockConfig.getSize());
+                storage.addBlock(block);
+                blockList.add(block);
             }
-            this.blockList.put(entry.getKey(),blockList);
+            this.blockList.put(entry.getKey(), blockList);
         }
     }
 

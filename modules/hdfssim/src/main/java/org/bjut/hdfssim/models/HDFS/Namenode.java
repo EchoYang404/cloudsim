@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
+import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.Request.Request;
 import org.bjut.hdfssim.util.HDFSConfig;
 
@@ -74,23 +75,38 @@ public class Namenode implements Serializable {
         int rackId = random.nextInt(rackCount);
         int successNum = 0;
         int notAvailbleRack = rackId;
+        int ssdNum = 1;
+        int type;
 
         Iterator<Block> blockIterator = replicaList.iterator();
         // add first block
-        if (uploadBlockToRack(blockIterator.next(), rackId)) {
+        type = uploadBlockToRack(blockIterator.next(), rackId, ssdNum);
+        if (type == Storage.HDD || type == Storage.SSD) {
             successNum++;
+            if (type == Storage.SSD) {
+                ssdNum--;
+            }
         }
-        // add second block
-        if (uploadBlockToRack(blockIterator.next(), rackId)) {
-            successNum++;
-        }
-        // add rest blocks
 
+        // add second block
+        type = uploadBlockToRack(blockIterator.next(), rackId, ssdNum);
+        if (type == Storage.HDD || type == Storage.SSD) {
+            successNum++;
+            if (type == Storage.SSD) {
+                ssdNum--;
+            }
+        }
+
+        // add rest blocks
         while (blockIterator.hasNext()) {
             while (notAvailbleRack == (rackId = random.nextInt(rackCount))) {
             }
-            if (uploadBlockToRack(blockIterator.next(), rackId)) {
+            type = uploadBlockToRack(blockIterator.next(), rackId, ssdNum);
+            if (type == Storage.HDD || type == Storage.SSD) {
                 successNum++;
+                if (type == Storage.SSD) {
+                    ssdNum--;
+                }
             }
         }
         if (successNum != replicaList.size()) {
@@ -100,22 +116,28 @@ public class Namenode implements Serializable {
         return true;
     }
 
-    private boolean uploadBlockToRack(Block block, int rackId) {
-        Datanode node = this.getRandomDatanodeIdByRack(rackId);
-        int num = 10;
-        while (!node.addBlock(block) && num != 0) {
-            node = this.getRandomDatanodeIdByRack(rackId);
-            num--;
+    private int uploadBlockToRack(Block block, int rackId, int ssdNum) {
+        int type = -1;
+        for (int i = 0; i < 10; i++) {
+            Datanode node = this.getRandomDatanodeIdByRack(rackId);
+            if (ssdNum > 0) {
+                type = node.addBlockToStorage(block, Storage.SSD);
+            } else {
+                type = node.addBlockToStorage(block, Storage.HDD);
+            }
+            if (type == Storage.HDD || type == Storage.SSD) {
+                return type;
+            }
         }
-        if (num == 0) {
-            return false;
-        }
-        return true;
+        // 创建失败返回-1
+        return type;
     }
 
     private void resetReplicaStorage(List<Block> replicaList) {
         for (Block block : replicaList) {
-            block.getStorage().deleteBlock(block);
+            if (block.getStorage() != null) {
+                block.getStorage().deleteBlock(block);
+            }
         }
     }
 
@@ -169,8 +191,7 @@ public class Namenode implements Serializable {
         }
     }
 
-    public void setDatanodesFromConfigFile(String path)
-    {
+    public void setDatanodesFromConfigFile(String path) {
         Gson gson = new Gson();
         try {
             FileReader fr = new FileReader(path);
@@ -215,40 +236,34 @@ public class Namenode implements Serializable {
         Random random = new Random();
         for (int i = 0; i < requestCount; i++) {
             // TODO file应当随机 random.nextInt(fileCount)
-            requestList.add(new Request(getRandomDatanodeIdByRack(random.nextInt(rackCount)), this.HFileList.get(0), submitTime));
+            requestList.add(new Request(getRandomDatanodeIdByRack(random.nextInt(rackCount)), this.HFileList.get(0),
+                    submitTime));
             submitTime += 2;
         }
 
         return requestList;
     }
 
-    public void resetStorages()
-    {
+    public void resetStorages() {
         Iterator<List<Datanode>> listIterator = this.datanodeList.values().iterator();
-        while (listIterator.hasNext())
-        {
+        while (listIterator.hasNext()) {
             Iterator<Datanode> iterator = listIterator.next().iterator();
-            while(iterator.hasNext())
-            {
+            while (iterator.hasNext()) {
                 Datanode datanode = iterator.next();
                 datanode.resetStorages();
             }
         }
     }
 
-    public void addHFile(HFile hFile)
-    {
+    public void addHFile(HFile hFile) {
         this.HFileList.add(hFile);
     }
 
-    public Datanode getDatanodeByRackIdAndDatanodeId(int rackId, int datanodeId)
-    {
+    public Datanode getDatanodeByRackIdAndDatanodeId(int rackId, int datanodeId) {
         Iterator<Datanode> iterator = this.datanodeList.get(rackId).iterator();
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             Datanode datanode = iterator.next();
-            if(datanode.getId() == datanodeId)
-            {
+            if (datanode.getId() == datanodeId) {
                 return datanode;
             }
         }

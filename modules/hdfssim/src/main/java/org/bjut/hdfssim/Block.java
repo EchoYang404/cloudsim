@@ -22,16 +22,6 @@ public class Block implements Serializable {
         this.storage = null;
     }
 
-    public Block(HFile hFile, int id, double size, Storage storage) {
-        this.hFile = hFile;
-        this.id = id;
-        this.size = size;
-        this.currentNum = 0;
-        this.isMigrate = false;
-        this.storage = storage;
-    }
-
-
     public double getSize() {
         return size;
     }

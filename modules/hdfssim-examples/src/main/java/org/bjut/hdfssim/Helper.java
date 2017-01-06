@@ -13,8 +13,8 @@ public class Helper {
             Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
             while (datanodeIterator.hasNext()) {
                 Datanode datanode = datanodeIterator.next();
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD " + datanode.getStorageByType(Storage.HDD).getUsedSize());
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD " + datanode.getStorageByType(Storage.SSD).getUsedSize());
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD " + datanode.getStorageByType(Storage.SSD).getUsedSize());
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD " + datanode.getStorageByType(Storage.HDD).getUsedSize());
             }
         }
     }
