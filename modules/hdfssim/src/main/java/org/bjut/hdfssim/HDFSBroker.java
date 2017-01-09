@@ -62,5 +62,8 @@ public class HDFSBroker extends DatacenterBroker{
         }
     }
 
-
+    public void restRequestList()
+    {
+        this.requestList.clear();
+    }
 }

@@ -1,10 +1,7 @@
 package org.bjut.hdfssim.models.HDFS;
 
 import com.google.gson.Gson;
-import org.bjut.hdfssim.Block;
-import org.bjut.hdfssim.HDFSHost;
-import org.bjut.hdfssim.HFile;
-import org.bjut.hdfssim.Storage;
+import org.bjut.hdfssim.*;
 import org.bjut.hdfssim.models.Request.Request;
 import org.bjut.hdfssim.config.HDFSConfig;
 
@@ -14,12 +11,21 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Namenode implements Serializable {
-    private double blockSize = 64;
-    private int replicaCount = 3;
-    private List<HFile> HFileList = new ArrayList<>();
-    private Map<Integer, List<Datanode>> datanodeList = new HashMap<>(); // Map<rackId, List<datanode>>
+    private double blockSize;
+    private int replicaCount;
+    private List<HFile> HFileList;
+    private Map<Integer, List<Datanode>> datanodeList; // Map<rackId, List<datanode>>
 
     public Namenode() {
+        this.blockSize = Configuration.getIntProperty("blockSize");
+        this.replicaCount = Configuration.getIntProperty("replicaCount");;
+        init();
+    }
+
+    private void init()
+    {
+        this.HFileList = new ArrayList<>();
+        this.datanodeList = new HashMap<>();
     }
 
     public double getBlockSize() {
@@ -191,31 +197,6 @@ public class Namenode implements Serializable {
         }
     }
 
-    public void setDatanodesFromConfigFile(String path) {
-        Gson gson = new Gson();
-        try {
-            FileReader fr = new FileReader(path);
-            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
-            config.setDatanodeList(this);
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public void setHFilesFromConfigFile(String path) {
-        Gson gson = new Gson();
-        try {
-            FileReader fr = new FileReader(path);
-            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
-            config.setHFileList(this);
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void createHFileByRadom(int fileNum, int minSize, int maxSize) {
         Random random = new Random();
 
@@ -283,5 +264,19 @@ public class Namenode implements Serializable {
             }
         }
         return null;
+    }
+
+    public void initFromConfigFile(String path)
+    {
+        init();
+        Gson gson = new Gson();
+        try {
+            FileReader fr = new FileReader(path);
+            HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            config.setDatanodeList(this);
+            config.setHFileList(this);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
