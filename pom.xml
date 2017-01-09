@@ -69,11 +69,6 @@
 			<artifactId>hdfssim</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>hdfssim-examples</artifactId>
-			<version>${project.version}</version>
-		</dependency>
   		<dependency>
   			<groupId>${project.groupId}</groupId>
   			<artifactId>documentation</artifactId>
