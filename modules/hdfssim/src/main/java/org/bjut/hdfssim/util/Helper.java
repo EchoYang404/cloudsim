@@ -1,6 +1,8 @@
-package org.bjut.hdfssim;
+package org.bjut.hdfssim.util;
 
 import com.opencsv.CSVWriter;
+import org.bjut.hdfssim.Configuration;
+import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
@@ -45,5 +47,10 @@ public class Helper {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getConfigPath(String name)
+    {
+        return Configuration.getBasePath() + name + ".json";
     }
 }
