@@ -1,8 +1,6 @@
-package org.bjut.hdfssim.util;
+package org.bjut.hdfssim;
 
 import com.opencsv.CSVWriter;
-import org.bjut.hdfssim.Configuration;
-import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
@@ -32,12 +30,7 @@ public class Helper {
 
     public static void saveResult(List<Request> requestList, String path) {
         try {
-            File file = new File(path);
-            if(file.exists())
-            {
-                //file.renameTo(file.)
-            }
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(file), ',');
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(new File(path)), ',');
             String[] head = {"fileSize", "submitTime", "finishedTime", "useTime"};
             csvWriter.writeNext(head);
 
@@ -52,10 +45,5 @@ public class Helper {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static String getConfigPath(String name)
-    {
-        return Configuration.getBasePath() + name + ".json";
     }
 }

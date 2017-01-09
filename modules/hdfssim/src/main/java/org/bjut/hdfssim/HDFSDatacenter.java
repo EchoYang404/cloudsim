@@ -22,13 +22,6 @@ public class HDFSDatacenter extends SimEntity {
     private double lastProcessTime;
     private DatanodeAllocationPolicy policy;
 
-    public HDFSDatacenter(String name, Namenode namenode)
-    {
-        super(name);
-        this.namenode = namenode;
-        this.policy = null;
-    }
-
     public HDFSDatacenter(String name, Namenode namenode, DatanodeAllocationPolicy policy) {
         super(name);
         this.namenode = namenode;
@@ -120,13 +113,5 @@ public class HDFSDatacenter extends SimEntity {
 
     public void setLastProcessTime(double lastProcessTime) {
         this.lastProcessTime = lastProcessTime;
-    }
-
-    public void setPolicy(DatanodeAllocationPolicy policy) {
-        this.policy = policy;
-    }
-
-    public void setHostList() {
-        this.hostList = namenode.getHDFSHostList();
     }
 }

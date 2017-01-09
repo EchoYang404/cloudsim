@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Storage implements Serializable {
+    private int id;
     private double capacity;
     private double usedSize;
     private Map<Integer, Block> blockList; // blockId, Block
@@ -29,6 +30,7 @@ public class Storage implements Serializable {
     public static final int HDD = 1;
 
     public Storage(Datanode datanode, double maxTransferRate, double capacity) {
+        this.id = Id.pollId(this.getClass());
         this.capacity = capacity;
         this.usedSize = 0;
         this.blockList = new HashMap<>();

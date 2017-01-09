@@ -6,7 +6,13 @@ import org.bjut.hdfssim.models.HDFS.Namenode;
 
 public class CreateConfig {
 
-    public static void excute(String path, int fileNum, int requestNum)
+    public static void main(String[] args)
+    {
+        String path = Configuration.getBasePath() + "HDFSConfig.json";
+        excute(path);
+    }
+
+    public static void excute(String path)
     {
         HDFSConfig config = new HDFSConfig();
         // Create namenode
@@ -21,11 +27,11 @@ public class CreateConfig {
         config.setDatanodeConfigList(namenode);
 
         // Create HFiles by random and write to json file
-        namenode.createHFileByRadom(fileNum,1024,2048);
+        namenode.createHFileByRadom(100,1024,2048);
         config.setHFileConfigList(namenode);
 
         // Create request by random and write to json file
-        config.setRequestConfigList(namenode,requestNum);
+        config.setRequestConfigList(namenode,100);
         config.writeToFile(path);
     }
 
