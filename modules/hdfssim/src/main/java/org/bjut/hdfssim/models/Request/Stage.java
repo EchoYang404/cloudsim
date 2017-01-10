@@ -1,5 +1,7 @@
 package org.bjut.hdfssim.models.Request;
 
+import org.bjut.hdfssim.Configuration;
+
 public class Stage {
     private double length;
     private double restLength;
@@ -25,7 +27,8 @@ public class Stage {
         if(isFinished) return;
 
         double t = time - nextStartTime;
-        if(t * speed >= restLength || restLength < 0.1)
+        double tmpTime = nextStartTime + restLength / speed;
+        if(Math.abs(time - tmpTime) < Configuration.getDoubleProperty("precision") || tmpTime < time)
         {
             finishedTime = nextStartTime + restLength / speed;
             restLength = 0;
@@ -35,6 +38,7 @@ public class Stage {
         {
              restLength -= t * speed;
              nextStartTime = time;
+            predictTime = Double.MAX_VALUE;
         }
     }
 

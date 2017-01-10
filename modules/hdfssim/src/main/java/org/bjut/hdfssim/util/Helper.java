@@ -6,6 +6,7 @@ import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
+import org.cloudbus.cloudsim.Log;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -33,14 +34,14 @@ public class Helper {
     public static void saveResult(List<Request> requestList, String path) {
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(new File(path)), ',');
-            String[] head = {"fileSize", "submitTime", "finishedTime", "useTime"};
+            String[] head = {"fileSize", "submitTime", "finishedTime", "useTime","=sum(D2:D" + (requestList.size() + 1) +")/" + getFinishedNum(requestList)};
             csvWriter.writeNext(head);
 
             Iterator<Request> iterator = requestList.iterator();
             while (iterator.hasNext()) {
                 Request r = iterator.next();
                 String[] item = {Double.toString(r.gethFile().getSize()), Double.toString(r.getSubmitTime()),
-                        Double.toString(r.getFinishedTime()), Double.toString(r.getFinishedTime() - r.getSubmitTime())};
+                        Double.toString(r.getFinishedTime()), Double.toString(r.getFinishedTime() - r.getSubmitTime()),Integer.toString(r.gethFile().getBlockList().size()),Integer.toString(r.getCurrentCloudlet())};
                 csvWriter.writeNext(item);
             }
             csvWriter.close();
@@ -52,5 +53,18 @@ public class Helper {
     public static String getConfigPath(String name)
     {
         return Configuration.getBasePath() + name + ".json";
+    }
+
+    private static int getFinishedNum(List<Request> requestList)
+    {
+        int sum = 0;
+        for(Request r : requestList)
+        {
+            if(r.isFinished())
+            {
+                sum++;
+            }
+        }
+        return sum;
     }
 }

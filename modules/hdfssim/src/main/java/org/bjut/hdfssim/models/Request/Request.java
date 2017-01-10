@@ -5,6 +5,7 @@ import org.bjut.hdfssim.HDFSBroker;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.util.Id;
+import org.cloudbus.cloudsim.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -92,6 +93,7 @@ public class Request {
         {
             this.isFinished = true;
             this.finishedTime = this.cloudletList.get(currentCloudlet).getFinishedTime();
+            Log.printLine("request " + id + " time " + finishedTime);
             return false;
         }
     }
@@ -101,5 +103,13 @@ public class Request {
 
     public double getFinishedTime() {
         return finishedTime;
+    }
+
+    public int getCurrentCloudlet() {
+        return currentCloudlet;
+    }
+
+    public int getId() {
+        return id;
     }
 }

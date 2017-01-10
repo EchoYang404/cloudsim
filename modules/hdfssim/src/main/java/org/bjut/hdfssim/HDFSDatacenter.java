@@ -46,7 +46,7 @@ public class HDFSDatacenter extends SimEntity {
             // 处理提交的Request
             case CloudSimTags.RequestCreate:
                 processRequestCreate(ev);
-                updateCloudletProcessing();
+                //updateCloudletProcessing();
                 break;
 
             case CloudSimTags.RequestExcute:
@@ -62,6 +62,7 @@ public class HDFSDatacenter extends SimEntity {
 
         request.start(CloudSim.clock());
         allocateDatanode(request);
+        send(getId(), 0, CloudSimTags.RequestExcute, request.getCurrentReadCloudlet());
     }
 
     private void allocateDatanode(Request request) {
@@ -90,6 +91,9 @@ public class HDFSDatacenter extends SimEntity {
     }
 
     protected void processRequestExcute(SimEvent ev) {
+        //Log.printLine("time " + ev.eventTime());
+        ReadCloudlet result = (ReadCloudlet) ev.getData();
+        //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentCloudlet() + " " + result.getRequest().getCurrentReadCloudlet().getCurrentStageType() + " " + result.getCurrentStage().getPredictTime());
         Iterator<HDFSHost> iterator = hostList.values().iterator();
         SortedSet<ReadCloudlet> completeList = new TreeSet<>();
         while (iterator.hasNext()) {

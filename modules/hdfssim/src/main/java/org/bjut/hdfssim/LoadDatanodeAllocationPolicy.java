@@ -19,7 +19,7 @@ public class LoadDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
             double distance = addr.getDistance(block.getStorage().getDatanode());
             //double tmp = 0.313 * (4 - distance) / 4 + 0.313 * host.getBwUtilization() + 0.5506 * host.getDiskUtilization(block)/300 + 0.0935 * host
             // .getCpuUtilization();
-            double tmp = 0.313 * (4 - distance) / 4 + 0.5506 * host.getDiskUtilization
+            double tmp = 0.313 * (4 - distance) / 4 + 0.313 * host.getBwUtilization() + 0.5506 * host.getDiskUtilization
                     (block) / 300 + 0.0935 * host.getCpuUtilization();
             sum += tmp;
             list.add(sum);

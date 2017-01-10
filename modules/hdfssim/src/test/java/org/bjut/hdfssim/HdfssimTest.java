@@ -31,11 +31,12 @@ public class HdfssimTest {
 
     @Test
     public void testCreateConfig() throws Exception {
-        CreateConfig.excute(Helper.getConfigPath(name),100,100);
+        CreateConfig.excute(Helper.getConfigPath(name),100,2);
     }
 
     @Test
     public void testDefault() throws Exception {
+        //CreateConfig.excute(Helper.getConfigPath(name),100,100);
         Log.printLine("Starting Default...");
         init();
         try {
@@ -58,7 +59,6 @@ public class HdfssimTest {
             CloudSim.stopSimulation();
 
             Helper.saveResult(requestList, resultPath);
-
         } catch (Exception e) {
             e.printStackTrace();
             Log.printLine("Unwanted errors happen");
@@ -89,7 +89,6 @@ public class HdfssimTest {
             CloudSim.stopSimulation();
 
             Helper.saveResult(requestList, resultPath);
-
         } catch (Exception e) {
             e.printStackTrace();
             Log.printLine("Unwanted errors happen");

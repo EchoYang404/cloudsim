@@ -1,5 +1,6 @@
 package org.bjut.hdfssim.provisioners;
 
+import org.bjut.hdfssim.Configuration;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 
 import java.io.Serializable;
@@ -20,6 +21,7 @@ public class ProvisionerForHDFS implements Serializable {
     }
 
     private double getSpeed() {
+        if(currentNum == 0) return capacity;
         return capacity / currentNum;
     }
 
@@ -39,6 +41,7 @@ public class ProvisionerForHDFS implements Serializable {
 
     public SortedSet<ReadCloudlet> excuteCloudlets(double time) {
         SortedSet<ReadCloudlet> finished = new TreeSet<>();
+        if(cloudletList.isEmpty()) return finished;
         Iterator<ReadCloudlet> iterator = cloudletList.iterator();
         double speed = getSpeed();
         while (iterator.hasNext()) {
@@ -47,7 +50,7 @@ public class ProvisionerForHDFS implements Serializable {
             cloudlet.getCurrentStage().excute(time, speed);
 
             double finishedTime = cloudlet.getCurrentStage().getFinishedTime();
-            if (finishedTime <= time) {
+            if (Math.abs(finishedTime - time) < Configuration.getDoubleProperty("precision") || finishedTime < time) {
                 finished.add(cloudlet);
                 iterator.remove();
                 currentNum--;
@@ -67,10 +70,16 @@ public class ProvisionerForHDFS implements Serializable {
         ReadCloudlet result = null;
         for(ReadCloudlet cloudlet : this.cloudletList)
         {
+            double preTime = cloudlet.getCurrentStage().getPredictTime();
             cloudlet.getCurrentStage().tryExcute(speed);
-            if(time > cloudlet.getCurrentStage().getPredictTime())
+            double newTime = cloudlet.getCurrentStage().getPredictTime();
+            if(Math.abs(preTime - newTime) < Configuration.getDoubleProperty("precision"))
             {
-                time = cloudlet.getCurrentStage().getPredictTime();
+                continue;
+            }
+            if(time + Configuration.getDoubleProperty("precision") > newTime)
+            {
+                time = newTime;
                 result = cloudlet;
             }
         }

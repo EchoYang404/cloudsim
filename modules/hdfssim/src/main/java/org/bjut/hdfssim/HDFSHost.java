@@ -58,7 +58,7 @@ public class HDFSHost implements Serializable {
     }
 
     public void addCloudLet(double time, ReadCloudlet cloudlet) {
-        cloudlet.setHost(this);
+        cloudlet.allocateHost(this);
         int minCPUNum = Integer.MAX_VALUE;
         ProvisionerForHDFS pe = null;
         for (ProvisionerForHDFS provisioner : peProvisionerList) {
@@ -188,7 +188,7 @@ public class HDFSHost implements Serializable {
             time = result.getCurrentStage().getPredictTime();
         }
         ReadCloudlet tmp = p.tryExcute();
-        if (tmp != null && tmp.getCurrentStage().getPredictTime() < time) {
+        if (tmp != null && tmp.getCurrentStage().getPredictTime() <= time + 0.01) {
             result = tmp;
         }
         return result;
