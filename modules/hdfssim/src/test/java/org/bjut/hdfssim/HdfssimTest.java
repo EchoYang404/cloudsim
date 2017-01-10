@@ -31,7 +31,7 @@ public class HdfssimTest {
 
     @Test
     public void testCreateConfig() throws Exception {
-        CreateConfig.excute(Helper.getConfigPath("HDFSConfig"),100,100);
+        CreateConfig.excute(Helper.getConfigPath(name),100,100);
     }
 
     @Test
@@ -45,7 +45,7 @@ public class HdfssimTest {
             CloudSim.init(num_user, calendar, trace_flag);
 
             String path = Helper.getConfigPath(name);
-            String resultPath = Configuration.getBasePath() + "result1.csv";
+            String resultPath = Configuration.getBasePath() + name + "_1.csv";
 
             HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
                     DefaultDatanodeAllocationPolicy());
@@ -76,7 +76,7 @@ public class HdfssimTest {
             CloudSim.init(num_user, calendar, trace_flag);
 
             String path = Helper.getConfigPath(name);
-            String resultPath = Configuration.getBasePath() + "result2.csv";
+            String resultPath = Configuration.getBasePath() + name + "_2.csv";
 
             HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
                     LoadDatanodeAllocationPolicy());
