@@ -14,6 +14,9 @@ public class Datanode implements Serializable {
     private Storage ssdStorage;
     private HDFSHost host;
 
+    private int ssdCount = 0;
+    private int hddCount = 0;
+
     public Datanode() {
     }
 
@@ -35,27 +38,7 @@ public class Datanode implements Serializable {
                 , config.getCoreNum(), config.getMips());
     }
 
-
-    public int addBlock(Block block) {
-        if (isContainBlock(block.getId())) {
-            return -1;
-        }
-        Random random = new Random();
-        if (random.nextInt(100) > 50) {
-            if (!ssdStorage.isFull(block)) {
-                ssdStorage.addBlock(block);
-                return Storage.SSD;
-            }
-        }
-        if (!hddStorage.isFull(block)) {
-            hddStorage.addBlock(block);
-            return Storage.HDD;
-        }
-        return -1;
-    }
-
     public int addBlockToStorage(Block block, int type) {
-
         if (isContainBlock(block.getId())) {
             return -1;
         }
@@ -134,5 +117,27 @@ public class Datanode implements Serializable {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public double getSSDUtilization()
+    {
+        return ssdStorage.getUsedSize() / ssdStorage.getCapacity();
+    }
+
+    public void accessSsd()
+    {
+        ssdCount++;
+    }
+    public void accessHdd()
+    {
+        hddCount++;
+    }
+
+    public int getSsdCount() {
+        return ssdCount;
+    }
+
+    public int getHddCount() {
+        return hddCount;
     }
 }

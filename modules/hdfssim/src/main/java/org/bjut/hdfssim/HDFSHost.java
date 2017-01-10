@@ -44,9 +44,6 @@ public class HDFSHost implements Serializable {
 
     private List<ProvisionerForHDFS> peProvisionerList;
 
-    private int ssdCount = 0;
-    private int hddCount = 0;
-
     public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum, double mips) {
         this.id = datanode.getId();
         this.datanode = datanode;
@@ -76,11 +73,11 @@ public class HDFSHost implements Serializable {
         int type = this.datanode.getStorageTypeByBlockId(cloudlet.getBlockId());
         if(type== Storage.SSD)
         {
-            ssdCount++;
+            this.datanode.accessSsd();
         }
         else if(type== Storage.HDD)
         {
-            hddCount++;
+            this.datanode.accessHdd();
         }
         else
         {
@@ -278,14 +275,6 @@ public class HDFSHost implements Serializable {
     public double getMips()
     {
         return this.peProvisionerList.get(0).getCapacity();
-    }
-
-    public int getSsdCount() {
-        return ssdCount;
-    }
-
-    public int getHddCount() {
-        return hddCount;
     }
 }
 

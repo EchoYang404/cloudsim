@@ -41,10 +41,9 @@ public class Helper {
             Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
             while (datanodeIterator.hasNext()) {
                 Datanode datanode = datanodeIterator.next();
-                HDFSHost host = datanode.getHost();
 
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD acc" + host.getSsdCount());
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD acc" + host.getHddCount());
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD acc" + datanode.getSsdCount());
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD acc" + datanode.getHddCount());
             }
         }
     }
