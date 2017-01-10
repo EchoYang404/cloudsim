@@ -2,10 +2,12 @@ package org.bjut.hdfssim.util;
 
 import com.opencsv.CSVWriter;
 import org.bjut.hdfssim.Configuration;
+import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.Storage;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
+import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 
 import java.io.File;
@@ -27,6 +29,22 @@ public class Helper {
                         .getStorageByType(Storage.SSD).getUsedSize());
                 System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD " + datanode
                         .getStorageByType(Storage.HDD).getUsedSize());
+            }
+        }
+    }
+
+    public static void printStorageAccessTime(Namenode namenode)
+    {
+        Iterator<Map.Entry<Integer, List<Datanode>>> entryIterator = namenode.getDatanodeList().entrySet().iterator();
+        while (entryIterator.hasNext()) {
+            Map.Entry<Integer, List<Datanode>> entry = entryIterator.next();
+            Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
+            while (datanodeIterator.hasNext()) {
+                Datanode datanode = datanodeIterator.next();
+                HDFSHost host = datanode.getHost();
+
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD acc" + host.getSsdCount());
+                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD acc" + host.getHddCount());
             }
         }
     }

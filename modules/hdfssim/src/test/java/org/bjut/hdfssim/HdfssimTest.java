@@ -31,7 +31,7 @@ public class HdfssimTest {
 
     @Test
     public void testCreateConfig() throws Exception {
-        CreateConfig.excute(Helper.getConfigPath(name),100,2);
+        CreateConfig.excute(Helper.getConfigPath(name),100,50);
     }
 
     @Test
@@ -57,7 +57,7 @@ public class HdfssimTest {
 
             CloudSim.startSimulation();
             CloudSim.stopSimulation();
-
+            Helper.printStorageAccessTime(namenode);
             Helper.saveResult(requestList, resultPath);
         } catch (Exception e) {
             e.printStackTrace();
@@ -87,7 +87,7 @@ public class HdfssimTest {
 
             CloudSim.startSimulation();
             CloudSim.stopSimulation();
-
+            Helper.printStorageAccessTime(namenode);
             Helper.saveResult(requestList, resultPath);
         } catch (Exception e) {
             e.printStackTrace();
