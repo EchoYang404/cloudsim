@@ -1,6 +1,7 @@
 package org.bjut.hdfssim;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.models.Request.HCloudlet;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 import org.bjut.hdfssim.provisioners.ProvisionerForHDFS;
 
@@ -16,10 +17,10 @@ public class HDFSHost implements Serializable {
     private Datanode datanode;
 
     // TODO 在执行的cloudlet列表
-    private List<ReadCloudlet> cloudletList;
+    private List<HCloudlet> cloudletList;
 
     // TODO 已完成的cloudlet列表
-    private List<ReadCloudlet> finishedList;
+    private List<HCloudlet> finishedList;
 
     /**
      * The ssd provisioner for hdfs.
@@ -46,13 +47,13 @@ public class HDFSHost implements Serializable {
     public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum, double mips) {
         this.id = datanode.getId();
         this.datanode = datanode;
-        this.ssdProvisioner = new ProvisionerForHDFS(ssdMaxTransferRate, ReadCloudlet.DISK);
-        this.hddProvisioner = new ProvisionerForHDFS(hddMaxTransferRate, ReadCloudlet.DISK);
-        this.bwProvisioner = new ProvisionerForHDFS(bw, ReadCloudlet.BW);
-        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"), ReadCloudlet.NET);
+        this.ssdProvisioner = new ProvisionerForHDFS(ssdMaxTransferRate, HCloudlet.DISK);
+        this.hddProvisioner = new ProvisionerForHDFS(hddMaxTransferRate, HCloudlet.DISK);
+        this.bwProvisioner = new ProvisionerForHDFS(bw, HCloudlet.BW);
+        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"), HCloudlet.NET);
         this.peProvisionerList = new ArrayList<>();
         for (int i = 0; i < coreNum; i++) {
-            peProvisionerList.add(new ProvisionerForHDFS(mips, ReadCloudlet.CPU));
+            peProvisionerList.add(new ProvisionerForHDFS(mips, HCloudlet.CPU));
         }
         this.finishedList = new ArrayList<>();
     }
@@ -70,16 +71,16 @@ public class HDFSHost implements Serializable {
         pe.addCloudlet(cloudlet, time);
     }
 
-    public SortedSet<ReadCloudlet> excuteCloudlets(double time) {
+    public SortedSet<HCloudlet> excuteCloudlets(double time) {
 
-        SortedSet<ReadCloudlet> completeList = new TreeSet<>();
+        SortedSet<HCloudlet> completeList = new TreeSet<>();
         // excute all cpus cloudlets
         for (ProvisionerForHDFS provisioner : peProvisionerList) {
             completeList.addAll(provisioner.excuteCloudlets(time));
         }
-        Iterator<ReadCloudlet> iterator = completeList.iterator();
+        Iterator<HCloudlet> iterator = completeList.iterator();
         while (iterator.hasNext()) {
-            ReadCloudlet c = iterator.next();
+            HCloudlet c = iterator.next();
             excuteFinishedCPUCloudlet(c);
             completeList.remove(c);
         }
@@ -88,7 +89,7 @@ public class HDFSHost implements Serializable {
         completeList.addAll(hddProvisioner.excuteCloudlets(time));
         iterator = completeList.iterator();
         while (iterator.hasNext()) {
-            ReadCloudlet c = iterator.next();
+            HCloudlet c = iterator.next();
             excuteFinishedDiskCloudlet(c);
             completeList.remove(c);
         }
@@ -98,8 +99,8 @@ public class HDFSHost implements Serializable {
 
         iterator = completeList.iterator();
         while (iterator.hasNext()) {
-            ReadCloudlet c = iterator.next();
-            if (c.getMaxStage() == ReadCloudlet.NET) {
+            HCloudlet c = iterator.next();
+            if (c.getMaxStage() == HCloudlet.NET) {
                 excuteFinishedBwCloudlet(c);
                 completeList.remove(c);
             }
@@ -111,7 +112,7 @@ public class HDFSHost implements Serializable {
         return completeList;
     }
 
-    private void excuteFinishedCPUCloudlet(ReadCloudlet cloudlet) {
+    private void excuteFinishedCPUCloudlet(HCloudlet cloudlet) {
         // 下一阶段的开始时间
         double startTime = cloudlet.getCurrentStage().getFinishedTime();
         // block所在磁盘介质类型
@@ -124,9 +125,9 @@ public class HDFSHost implements Serializable {
         }
 
         // 下一阶段开始前，执行所有任务
-        SortedSet<ReadCloudlet> finishedDiskList = provisioner.excuteCloudlets(startTime);
+        SortedSet<HCloudlet> finishedDiskList = provisioner.excuteCloudlets(startTime);
         // 对下一阶段开始前完成的所有任务执行磁盘任务
-        for (ReadCloudlet c : finishedDiskList) {
+        for (HCloudlet c : finishedDiskList) {
             excuteFinishedDiskCloudlet(c);
         }
 
@@ -138,12 +139,12 @@ public class HDFSHost implements Serializable {
 
     }
 
-    private void excuteFinishedDiskCloudlet(ReadCloudlet cloudlet) {
+    private void excuteFinishedDiskCloudlet(HCloudlet cloudlet) {
         // 下一阶段的开始时间
         double startTime = cloudlet.getCurrentStage().getFinishedTime();
         // 下一阶段开始前，执行所有任务
-        SortedSet<ReadCloudlet> finishedBwList = bwProvisioner.excuteCloudlets(startTime);
-        for (ReadCloudlet c : finishedBwList) {
+        SortedSet<HCloudlet> finishedBwList = bwProvisioner.excuteCloudlets(startTime);
+        for (HCloudlet c : finishedBwList) {
             excuteFinishedBwCloudlet(c);
         }
 
@@ -154,7 +155,7 @@ public class HDFSHost implements Serializable {
 
     }
 
-    private void excuteFinishedBwCloudlet(ReadCloudlet cloudlet) {
+    private void excuteFinishedBwCloudlet(HCloudlet cloudlet) {
         // 下一阶段的开始时间
         double startTime = cloudlet.getCurrentStage().getFinishedTime();
         // 下一阶段开始前，执行所有任务
@@ -167,8 +168,8 @@ public class HDFSHost implements Serializable {
     }
 
 
-    public ReadCloudlet tryExcuteCloudlets() {
-        ReadCloudlet result = null;
+    public HCloudlet tryExcuteCloudlets() {
+        HCloudlet result = null;
         for (ProvisionerForHDFS p : peProvisionerList) {
             result = tryExcute(p, result);
         }
@@ -180,14 +181,14 @@ public class HDFSHost implements Serializable {
         return result;
     }
 
-    private ReadCloudlet tryExcute(ProvisionerForHDFS p, ReadCloudlet result) {
+    private HCloudlet tryExcute(ProvisionerForHDFS p, HCloudlet result) {
         double time;
         if (result == null) {
             time = Double.MAX_VALUE;
         } else {
             time = result.getCurrentStage().getPredictTime();
         }
-        ReadCloudlet tmp = p.tryExcute();
+        HCloudlet tmp = p.tryExcute();
         if (tmp != null && tmp.getCurrentStage().getPredictTime() <= time + 0.01) {
             result = tmp;
         }

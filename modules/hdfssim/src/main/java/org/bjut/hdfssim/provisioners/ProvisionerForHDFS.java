@@ -1,6 +1,7 @@
 package org.bjut.hdfssim.provisioners;
 
 import org.bjut.hdfssim.Configuration;
+import org.bjut.hdfssim.models.Request.HCloudlet;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 
 import java.io.Serializable;
@@ -11,7 +12,7 @@ public class ProvisionerForHDFS implements Serializable {
     private int currentNum;
     private final int type;
     // 正在运行的任务列表
-    protected List<ReadCloudlet> cloudletList;
+    protected List<HCloudlet> cloudletList;
 
     public ProvisionerForHDFS(double capacity, int type) {
         this.cloudletList = new ArrayList<>();
@@ -25,7 +26,7 @@ public class ProvisionerForHDFS implements Serializable {
         return capacity / currentNum;
     }
 
-    public void addCloudlet(ReadCloudlet cloudlet, double time) {
+    public void addCloudlet(HCloudlet cloudlet, double time) {
         if (cloudlet.getCurrentStageType() != this.type) {
             try {
                 throw new Exception("Type of Provisoner and cloudlet is different!");
@@ -39,13 +40,13 @@ public class ProvisionerForHDFS implements Serializable {
         this.currentNum++;
     }
 
-    public SortedSet<ReadCloudlet> excuteCloudlets(double time) {
-        SortedSet<ReadCloudlet> finished = new TreeSet<>();
+    public SortedSet<HCloudlet> excuteCloudlets(double time) {
+        SortedSet<HCloudlet> finished = new TreeSet<>();
         if(cloudletList.isEmpty()) return finished;
-        Iterator<ReadCloudlet> iterator = cloudletList.iterator();
+        Iterator<HCloudlet> iterator = cloudletList.iterator();
         double speed = getSpeed();
         while (iterator.hasNext()) {
-            ReadCloudlet cloudlet = iterator.next();
+            HCloudlet cloudlet = iterator.next();
 
             cloudlet.getCurrentStage().excute(time, speed);
 
@@ -63,12 +64,12 @@ public class ProvisionerForHDFS implements Serializable {
         return currentNum;
     }
 
-    public ReadCloudlet tryExcute()
+    public HCloudlet tryExcute()
     {
         double time = Double.MAX_VALUE;
         double speed = getSpeed();
-        ReadCloudlet result = null;
-        for(ReadCloudlet cloudlet : this.cloudletList)
+        HCloudlet result = null;
+        for(HCloudlet cloudlet : this.cloudletList)
         {
             double preTime = cloudlet.getCurrentStage().getPredictTime();
             cloudlet.getCurrentStage().tryExcute(speed);

@@ -7,13 +7,12 @@ import org.bjut.hdfssim.HDFSHost;
 import java.util.List;
 
 public class ReadCloudlet extends HCloudlet {
-    private int blockId;
     private List<Block> blockList;
     private Request request;
 
     public ReadCloudlet(int blockId, List<Block> blockList, Request request) {
-        super(blockList.get(0).getSize());
-        this.blockId = blockId;
+        super(blockId,blockList.get(0).getSize());
+
         this.blockList = blockList;
         this.request = request;
     }
@@ -22,9 +21,7 @@ public class ReadCloudlet extends HCloudlet {
         return blockList;
     }
 
-    public int getBlockId() {
-        return blockId;
-    }
+
 
     public Request getRequest() {
         return request;
@@ -34,7 +31,7 @@ public class ReadCloudlet extends HCloudlet {
     public void allocateHost(HDFSHost host) {
         this.setHost(host);
         if (this.getHost().getDatanode().getRackId() != this.request.getAddr().getRackId()) {
-            this.setMaxStage(ReadCloudlet.NET);
+            this.setMaxStage(HCloudlet.NET);
             this.setNetStage(new Stage(blockList.get(0).getSize()));
         }
     }

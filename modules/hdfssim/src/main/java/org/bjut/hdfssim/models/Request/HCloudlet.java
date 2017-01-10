@@ -7,6 +7,7 @@ import org.bjut.hdfssim.HDFSHost;
 import java.util.List;
 
 public abstract class HCloudlet implements Comparable<HCloudlet> {
+    private int blockId;
     //初始时未选择执行的host
     private HDFSHost host;
     private double startTime;
@@ -27,16 +28,18 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
     public static final int BW = 3;
     public static final int NET = 4;
 
-    public HCloudlet(double size) {
+    public HCloudlet(int blockId, double size) {
+        this.blockId = blockId;
+
         this.cpuStage = new Stage(Configuration.getIntProperty("readBlockMips"));
         this.diskStage = new Stage(size);
         this.bwStage = new Stage(size);
-        this.maxStage = ReadCloudlet.BW;
+        this.maxStage = HCloudlet.BW;
         this.netStage = null;
 
         this.startTime = Double.MAX_VALUE;
         this.finishedTime = Double.MAX_VALUE;
-        this.currentStage = ReadCloudlet.CPU;
+        this.currentStage = HCloudlet.CPU;
         this.host = null;
         this.isStarted = false;
         this.isFinished = false;
@@ -44,18 +47,18 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public Stage getCurrentStage() {
         switch (currentStage) {
-            case ReadCloudlet.CPU:
+            case HCloudlet.CPU:
                 return cpuStage;
-            case ReadCloudlet.DISK:
+            case HCloudlet.DISK:
                 return diskStage;
-            case ReadCloudlet.BW:
-                if (bwStage.isFinished() && this.maxStage == ReadCloudlet.BW) {
+            case HCloudlet.BW:
+                if (bwStage.isFinished() && this.maxStage == HCloudlet.BW) {
                     this.isFinished = true;
                     this.finishedTime = bwStage.getFinishedTime();
                 }
                 return bwStage;
-            case ReadCloudlet.NET:
-                if (netStage.isFinished() && this.maxStage == ReadCloudlet.NET) {
+            case HCloudlet.NET:
+                if (netStage.isFinished() && this.maxStage == HCloudlet.NET) {
                     this.isFinished = true;
                     this.finishedTime = netStage.getFinishedTime();
                 }
@@ -70,20 +73,20 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public void toNextStage() {
         switch (currentStage) {
-            case ReadCloudlet.CPU:
-                currentStage = ReadCloudlet.DISK;
+            case HCloudlet.CPU:
+                currentStage = HCloudlet.DISK;
                 break;
-            case ReadCloudlet.DISK:
-                currentStage = ReadCloudlet.BW;
+            case HCloudlet.DISK:
+                currentStage = HCloudlet.BW;
                 break;
-            case ReadCloudlet.BW:
-                if (maxStage == ReadCloudlet.BW) {
+            case HCloudlet.BW:
+                if (maxStage == HCloudlet.BW) {
                     currentStage = -1;
                 } else {
-                    currentStage = ReadCloudlet.NET;
+                    currentStage = HCloudlet.NET;
                 }
                 break;
-            case ReadCloudlet.NET:
+            case HCloudlet.NET:
                 currentStage = -1;
                 break;
         }
@@ -121,6 +124,10 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public void setStarted(boolean started) {
         isStarted = started;
+    }
+
+    public int getBlockId() {
+        return blockId;
     }
 
     public void start(double startTime) {

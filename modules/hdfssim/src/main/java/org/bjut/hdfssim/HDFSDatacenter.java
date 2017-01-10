@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
+import org.bjut.hdfssim.models.Request.HCloudlet;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 import org.bjut.hdfssim.models.Request.Request;
 import org.cloudbus.cloudsim.*;
@@ -71,14 +72,14 @@ public class HDFSDatacenter extends SimEntity {
     }
 
     protected void updateCloudletProcessing() {
-        ReadCloudlet result = null;
+        HCloudlet result = null;
         double time = Double.MAX_VALUE;
 
         Iterator<HDFSHost> iterator = hostList.values().iterator();
         while (iterator.hasNext()) {
             HDFSHost host = iterator.next();
             // 尝试执行所有任务，找到当前阶段（CPU,Disk,BW,NET）执行时间最小的任务
-            ReadCloudlet tmp = host.tryExcuteCloudlets();
+            HCloudlet tmp = host.tryExcuteCloudlets();
             if (tmp != null && tmp.getCurrentStage().getPredictTime() < time) {
                 result = tmp;
                 time = tmp.getCurrentStage().getPredictTime();
@@ -95,21 +96,20 @@ public class HDFSDatacenter extends SimEntity {
         ReadCloudlet result = (ReadCloudlet) ev.getData();
         //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentCloudlet() + " " + result.getRequest().getCurrentReadCloudlet().getCurrentStageType() + " " + result.getCurrentStage().getPredictTime());
         Iterator<HDFSHost> iterator = hostList.values().iterator();
-        SortedSet<ReadCloudlet> completeList = new TreeSet<>();
+        SortedSet<HCloudlet> completeList = new TreeSet<>();
         while (iterator.hasNext()) {
             HDFSHost host = iterator.next();
             // 执行time之前的所有任务
             completeList.addAll(host.excuteCloudlets(ev.eventTime()));
         }
-        Iterator<ReadCloudlet> cloudletIterator = completeList.iterator();
+        Iterator<HCloudlet> cloudletIterator = completeList.iterator();
         while (cloudletIterator.hasNext()) {
-            ReadCloudlet c = cloudletIterator.next();
-            if (c.getRequest().toNext()) {
-                allocateDatanode(c.getRequest());
+            HCloudlet c = cloudletIterator.next();
+            if (c.getClass() == ReadCloudlet.class && ((ReadCloudlet)c).getRequest().toNext()) {
+                allocateDatanode(((ReadCloudlet)c).getRequest());
             }
         }
     }
-
 
     public double getLastProcessTime() {
         return lastProcessTime;
