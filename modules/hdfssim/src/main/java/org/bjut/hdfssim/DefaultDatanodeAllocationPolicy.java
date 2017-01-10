@@ -17,9 +17,7 @@ public class DefaultDatanodeAllocationPolicy implements DatanodeAllocationPolicy
         while (iterator.hasNext()) {
             Block block = iterator.next();
             distance = addr.getDistance(block.getStorage().getDatanode());
-            if (distance == minDis && new Random().nextInt(100) < 50) {
-                datanode = block.getStorage().getDatanode();
-            } else if (distance < minDis) {
+            if (distance < minDis) {
                 datanode = block.getStorage().getDatanode();
                 minDis = addr.getDistance(block.getStorage().getDatanode());
             }
