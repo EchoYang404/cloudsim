@@ -4,6 +4,7 @@ import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HDFSBroker;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.util.Id;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Request {
+    private int id;
     private List<ReadCloudlet> cloudletList;
     private HFile hFile;
     private double submitTime;
@@ -26,6 +28,7 @@ public class Request {
     private int currentCloudlet;
 
     public Request(Datanode addr, HFile hFile, double submitTime) {
+        this.id = Id.pollId(this.getClass());
         this.hFile = hFile;
         this.submitTime = submitTime;
         this.addr = addr;

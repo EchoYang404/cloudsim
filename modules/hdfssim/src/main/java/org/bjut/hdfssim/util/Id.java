@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.bjut.hdfssim.models.Request.Request;
 import org.cloudbus.cloudsim.*;
 
 public final class Id {
@@ -23,7 +24,7 @@ public final class Id {
         COUNTERS.put(DatacenterBroker.class, 1);
         COUNTERS.put(Pe.class, 1);
 
-
+        COUNTERS.put(Request.class,1);
         COUNTERS.put(Block.class,1);
         COUNTERS.put(Storage.class,1);
         COUNTERS.put(HFile.class,1);
