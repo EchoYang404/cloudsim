@@ -5,6 +5,7 @@ import org.bjut.hdfssim.config.DatanodeConfig;
 import org.bjut.hdfssim.util.Id;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Random;
 
 public class Datanode implements Serializable {
@@ -12,10 +13,8 @@ public class Datanode implements Serializable {
     private int rackId;
     private Storage hddStorage;
     private Storage ssdStorage;
+    private DatanodeInfo info;
     private HDFSHost host;
-
-    private int ssdCount = 0;
-    private int hddCount = 0;
 
     public Datanode() {
     }
@@ -24,42 +23,59 @@ public class Datanode implements Serializable {
             ssdMaxTransferRate, double bw, int coreNum, double mips) {
         this.id = Id.pollId(Datanode.class);
         this.rackId = rackId;
-        this.hddStorage = new Storage(this, hddMaxTransferRate, hddCapacity);
-        this.ssdStorage = new Storage(this, ssdMaxTransferRate, ssdCapacity);
+        this.hddStorage = new Storage(this, hddMaxTransferRate, hddCapacity, Storage.SSD);
+        this.ssdStorage = new Storage(this, ssdMaxTransferRate, ssdCapacity, Storage.HDD);
         this.host = new HDFSHost(this, ssdMaxTransferRate, hddMaxTransferRate, bw, coreNum, mips);
+        this.info = new DatanodeInfo(this);
     }
 
     public Datanode(DatanodeConfig config) {
         this.id = config.getId();
         this.rackId = config.getRackId();
-        this.hddStorage = new Storage(this, config.getHddMaxTransferRate(), config.getHddCapacity());
-        this.ssdStorage = new Storage(this, config.getSsdMaxTransferRate(), config.getSsdCapacity());
+        this.hddStorage = new Storage(this, config.getHddMaxTransferRate(), config.getHddCapacity(), Storage.HDD);
+        this.ssdStorage = new Storage(this, config.getSsdMaxTransferRate(), config.getSsdCapacity(), Storage.SSD);
         this.host = new HDFSHost(this, config.getSsdMaxTransferRate(), config.getHddMaxTransferRate(), config.getBw()
                 , config.getCoreNum(), config.getMips());
+        this.info = new DatanodeInfo(this);
     }
 
     public int addBlockToStorage(Block block, int type) {
-        if (isContainBlock(block.getId())) {
-            return -1;
-        }
-        if(type == Storage.HDD)
-        {
+        if (type == Storage.HDD) {
             if (!hddStorage.isFull(block)) {
                 hddStorage.addBlock(block);
+                info.addHddBlock(block);
                 return Storage.HDD;
             }
         }
 
-        if(type == Storage.SSD)
-        {
+        if (type == Storage.SSD) {
             if (!ssdStorage.isFull(block)) {
                 ssdStorage.addBlock(block);
+                info.addSsdBlock(block);
                 return Storage.SSD;
             }
         }
         // 返回-1表示为添加失败
         return -1;
     }
+
+    public int addBlockToStorage(Block block, List<Double> accessHistory, int type) {
+        int value = addBlockToStorage(block, type);
+        if (value == -1) return value;
+        this.info.updateBlockHistory(block, accessHistory);
+        return value;
+    }
+
+    public List<Double> deleteBlock(Block block) {
+        int type = block.getStorage().getType();
+        block.getStorage().deleteBlock(block);
+        if (type == Storage.SSD) {
+            return this.info.deleteSsdBlock(block);
+        } else {
+            return this.info.deleteHddBlock(block);
+        }
+    }
+
 
     public boolean isFull(Block block) {
         if (hddStorage.isFull(block) && ssdStorage.isFull(block)) {
@@ -119,25 +135,36 @@ public class Datanode implements Serializable {
         return null;
     }
 
-    public double getSSDUtilization()
-    {
+    public double getSSDUtilization() {
         return ssdStorage.getUsedSize() / ssdStorage.getCapacity();
     }
 
-    public void accessSsd()
-    {
-        ssdCount++;
-    }
-    public void accessHdd()
-    {
-        hddCount++;
+    private Block getBlockById(int blockId) {
+        Block block = null;
+        if (ssdStorage.isContainBlock(blockId)) {
+            block = ssdStorage.getBlockById(blockId);
+        } else if (hddStorage.isContainBlock(blockId)) {
+            block = hddStorage.getBlockById(blockId);
+        } else {
+            try {
+                throw new Exception("there is no block " + blockId + " in this datanode!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return block;
     }
 
-    public int getSsdCount() {
-        return ssdCount;
+    public void accessBlockById(int blockId, double time) {
+        this.info.accessBlock(this.getBlockById(blockId), time);
     }
 
-    public int getHddCount() {
-        return hddCount;
+    public void finishAccessBlockById(int blockId)
+    {
+        this.info.finishAccessBlock(this.getBlockById(blockId));
+    }
+
+    public DatanodeInfo getInfo() {
+        return info;
     }
 }

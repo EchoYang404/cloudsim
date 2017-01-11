@@ -3,7 +3,6 @@ package org.bjut.hdfssim.models.Request;
 import org.bjut.hdfssim.Configuration;
 
 public class Stage {
-    private double length;
     private double restLength;
 
     private double nextStartTime = Double.MAX_VALUE;
@@ -13,7 +12,6 @@ public class Stage {
     private boolean isFinished = false;
     public Stage(double length)
     {
-        this.length = length;
         this.restLength = length;
     }
 
@@ -62,5 +60,9 @@ public class Stage {
 
     public double getPredictTime() {
         return predictTime;
+    }
+
+    public void setLength(double length) {
+        this.restLength = length;
     }
 }

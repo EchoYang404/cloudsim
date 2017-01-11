@@ -25,17 +25,19 @@ public class Storage implements Serializable {
     private Map<Integer, Block> blockList; // blockId, Block
     private double maxTransferRate;
     private Datanode datanode;
+    private int type;
 
     public static final int SSD = 0;
     public static final int HDD = 1;
 
-    public Storage(Datanode datanode, double maxTransferRate, double capacity) {
+    public Storage(Datanode datanode, double maxTransferRate, double capacity, int type) {
         this.id = Id.pollId(this.getClass());
         this.capacity = capacity;
         this.usedSize = 0;
         this.blockList = new HashMap<>();
         this.maxTransferRate = maxTransferRate;
         this.datanode = datanode;
+        this.type = type;
     }
 
     public double getMaxTransferRate() {
@@ -100,5 +102,14 @@ public class Storage implements Serializable {
 
     public double getCapacity() {
         return capacity;
+    }
+
+    public Block getBlockById(int blockId)
+    {
+        return this.blockList.get(blockId);
+    }
+
+    public int getType() {
+        return type;
     }
 }

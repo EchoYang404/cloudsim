@@ -4,10 +4,13 @@ import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.Configuration;
 import org.bjut.hdfssim.HDFSHost;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class HCloudlet implements Comparable<HCloudlet> {
     private int blockId;
+
+    private List<Block> blockList;
     //初始时未选择执行的host
     private HDFSHost host;
     private double startTime;
@@ -28,8 +31,9 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
     public static final int BW = 3;
     public static final int NET = 4;
 
-    public HCloudlet(int blockId, double size) {
+    public HCloudlet(int blockId, List<Block> blockList, double size) {
         this.blockId = blockId;
+        this.blockList = blockList;
 
         this.cpuStage = new Stage(Configuration.getIntProperty("readBlockMips"));
         this.diskStage = new Stage(size);
@@ -52,15 +56,17 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
             case HCloudlet.DISK:
                 return diskStage;
             case HCloudlet.BW:
-                if (bwStage.isFinished() && this.maxStage == HCloudlet.BW) {
+                if (!this.isFinished && bwStage.isFinished() && this.maxStage == HCloudlet.BW) {
                     this.isFinished = true;
                     this.finishedTime = bwStage.getFinishedTime();
+                    stop();
                 }
                 return bwStage;
             case HCloudlet.NET:
-                if (netStage.isFinished() && this.maxStage == HCloudlet.NET) {
+                if (!this.isFinished && netStage.isFinished() && this.maxStage == HCloudlet.NET) {
                     this.isFinished = true;
                     this.finishedTime = netStage.getFinishedTime();
+                    stop();
                 }
                 return netStage;
         }
@@ -94,6 +100,10 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public abstract void allocateHost(HDFSHost host);
 
+    protected void stop() {
+        this.getHost().getDatanode().finishAccessBlockById(this.getBlockId());
+    }
+
     public HDFSHost getHost() {
         return host;
     }
@@ -126,8 +136,20 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
         isStarted = started;
     }
 
+    public void resetCpuStageLength() {
+        this.cpuStage.setLength(0);
+    }
+
+    public void resetBwStageLength() {
+        this.bwStage.setLength(0);
+    }
+
     public int getBlockId() {
         return blockId;
+    }
+
+    public List<Block> getBlockList() {
+        return blockList;
     }
 
     public void start(double startTime) {

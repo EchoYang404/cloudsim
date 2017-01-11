@@ -46,4 +46,33 @@ public class Block implements Serializable {
         }
         return racks.size();
     }
+
+    public HFile gethFile() {
+        return hFile;
+    }
+
+    public void access() {
+        this.currentNum++;
+    }
+
+    public void finishAccess(){
+        this.currentNum--;
+        if(this.currentNum == 0 && this.isMigrate())
+        {
+            this.storage.deleteBlock(this);
+            this.hFile.getReplicaListById(this.getId()).remove(this);
+        }
+    }
+
+    public int getCurrentNum() {
+        return currentNum;
+    }
+
+    public void setMigrate(boolean migrate) {
+        isMigrate = migrate;
+    }
+
+    public boolean isMigrate() {
+        return isMigrate;
+    }
 }

@@ -1,5 +1,6 @@
 package org.bjut.hdfssim;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.config.BlockConfig;
 import org.bjut.hdfssim.config.HFileConfig;
@@ -29,11 +30,10 @@ public class HFile implements Serializable {
             List<Block> blockList = new ArrayList<>();
             while (iterator.hasNext()) {
                 BlockConfig blockConfig = iterator.next();
-                Storage storage = namenode
-                        .getDatanodeByRackIdAndDatanodeId(blockConfig.getRackId(), blockConfig.getDatanodeId())
-                        .getStorageByType(blockConfig.getStorageType());
+                Datanode datanode = namenode.getDatanodeByRackIdAndDatanodeId(blockConfig.getRackId(), blockConfig
+                        .getDatanodeId());
                 Block block = new Block(this, entry.getKey(), blockConfig.getSize());
-                storage.addBlock(block);
+                datanode.addBlockToStorage(block, blockConfig.getStorageType());
                 blockList.add(block);
             }
             this.blockList.put(entry.getKey(), blockList);
@@ -83,6 +83,13 @@ public class HFile implements Serializable {
             return blockList.get(blockId);
         }
         return null;
+    }
+
+    public void addBlock(int blockId, double size, Datanode datanode, int type, List<Double> accessHistory) {
+        Block block = new Block(this, blockId, size);
+        this.getReplicaListById(blockId).add(block);
+        datanode.addBlockToStorage(block, type);
+        datanode.getInfo().updateBlockHistory(block, accessHistory);
     }
 
     public Integer getId() {

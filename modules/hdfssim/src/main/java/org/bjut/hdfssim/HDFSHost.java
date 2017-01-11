@@ -58,7 +58,7 @@ public class HDFSHost implements Serializable {
         this.finishedList = new ArrayList<>();
     }
 
-    public void addCloudLet(double time, ReadCloudlet cloudlet) {
+    public void addCloudLet(double time, HCloudlet cloudlet) {
         cloudlet.allocateHost(this);
         int minCPUNum = Integer.MAX_VALUE;
         ProvisionerForHDFS pe = null;
@@ -69,24 +69,7 @@ public class HDFSHost implements Serializable {
             }
         }
         pe.addCloudlet(cloudlet, time);
-
-        int type = this.datanode.getStorageTypeByBlockId(cloudlet.getBlockId());
-        if(type== Storage.SSD)
-        {
-            this.datanode.accessSsd();
-        }
-        else if(type== Storage.HDD)
-        {
-            this.datanode.accessHdd();
-        }
-        else
-        {
-            try {
-                throw new Exception("there is no block in this host!");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        this.getDatanode().accessBlockById(cloudlet.getBlockId(), time);
     }
 
     public SortedSet<HCloudlet> excuteCloudlets(double time) {
@@ -100,7 +83,7 @@ public class HDFSHost implements Serializable {
         while (iterator.hasNext()) {
             HCloudlet c = iterator.next();
             excuteFinishedCPUCloudlet(c);
-            completeList.remove(c);
+            iterator.remove();
         }
         // excute all disk cloudlets
         completeList.addAll(ssdProvisioner.excuteCloudlets(time));
@@ -109,7 +92,7 @@ public class HDFSHost implements Serializable {
         while (iterator.hasNext()) {
             HCloudlet c = iterator.next();
             excuteFinishedDiskCloudlet(c);
-            completeList.remove(c);
+            iterator.remove();
         }
 
         // excute all bw cloudlets
@@ -120,7 +103,7 @@ public class HDFSHost implements Serializable {
             HCloudlet c = iterator.next();
             if (c.getMaxStage() == HCloudlet.NET) {
                 excuteFinishedBwCloudlet(c);
-                completeList.remove(c);
+                iterator.remove();
             }
         }
 
@@ -257,9 +240,9 @@ public class HDFSHost implements Serializable {
     // 返回网络带宽的当前速度
     public double getNetUtilization() {
         if (bwProvisioner.getCurrentNum() == 0) {
-            return ssdProvisioner.getCapacity();
+            return 1;
         }
-        return netProvisioner.getCapacity() / bwProvisioner.getCurrentNum();
+        return 1 / bwProvisioner.getCurrentNum();
     }
 
     public double getBw()

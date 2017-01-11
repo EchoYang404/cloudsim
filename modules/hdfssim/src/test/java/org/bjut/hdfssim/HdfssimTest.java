@@ -31,7 +31,7 @@ public class HdfssimTest {
 
     @Test
     public void testCreateConfig() throws Exception {
-        CreateConfig.excute(Helper.getConfigPath(name),100,50);
+        CreateConfig.excute(Helper.getConfigPath(name),100,100);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class HdfssimTest {
             String resultPath = Configuration.getBasePath() + name + "_1.csv";
 
             HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
-                    DefaultDatanodeAllocationPolicy());
+                    DefaultDatanodeAllocationPolicy(), false);
             HDFSBroker hdfsBroker = new HDFSBroker("brocker", datacenter);
 
             List<Request> requestList = namenode.getRquestListFromConfigFile(path);
@@ -79,7 +79,68 @@ public class HdfssimTest {
             String resultPath = Configuration.getBasePath() + name + "_2.csv";
 
             HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
-                    LoadDatanodeAllocationPolicy());
+                    LoadDatanodeAllocationPolicy(), false);
+            HDFSBroker hdfsBroker = new HDFSBroker("brocker", datacenter);
+
+            List<Request> requestList = namenode.getRquestListFromConfigFile(path);
+            hdfsBroker.submitRequests(requestList);
+
+            CloudSim.startSimulation();
+            CloudSim.stopSimulation();
+            Helper.printStorageAccessTime(namenode);
+            Helper.saveResult(requestList, resultPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.printLine("Unwanted errors happen");
+        }
+    }
+
+    @Test
+    public void testDefaultWithMigrate() throws Exception {
+        //CreateConfig.excute(Helper.getConfigPath(name),100,100);
+        Log.printLine("Starting Default...");
+        init();
+        try {
+            int num_user = 1;
+            Calendar calendar = Calendar.getInstance();
+            boolean trace_flag = false;
+            CloudSim.init(num_user, calendar, trace_flag);
+
+            String path = Helper.getConfigPath(name);
+            String resultPath = Configuration.getBasePath() + name + "_3.csv";
+
+            HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
+                    DefaultDatanodeAllocationPolicy(), true);
+            HDFSBroker hdfsBroker = new HDFSBroker("brocker", datacenter);
+
+            List<Request> requestList = namenode.getRquestListFromConfigFile(path);
+            hdfsBroker.submitRequests(requestList);
+
+            CloudSim.startSimulation();
+            CloudSim.stopSimulation();
+            Helper.printStorageAccessTime(namenode);
+            Helper.saveResult(requestList, resultPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.printLine("Unwanted errors happen");
+        }
+    }
+
+    @Test
+    public void testLoadWithMigrate() throws Exception {
+        Log.printLine("Starting Load...");
+        init();
+        try {
+            int num_user = 1;
+            Calendar calendar = Calendar.getInstance();
+            boolean trace_flag = false;
+            CloudSim.init(num_user, calendar, trace_flag);
+
+            String path = Helper.getConfigPath(name);
+            String resultPath = Configuration.getBasePath() + name + "_4.csv";
+
+            HDFSDatacenter datacenter = new HDFSDatacenter("HDFSDatacenter", namenode, new
+                    LoadDatanodeAllocationPolicy(), true);
             HDFSBroker hdfsBroker = new HDFSBroker("brocker", datacenter);
 
             List<Request> requestList = namenode.getRquestListFromConfigFile(path);

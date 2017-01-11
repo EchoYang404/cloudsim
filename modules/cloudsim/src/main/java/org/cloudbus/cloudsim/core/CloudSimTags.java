@@ -281,7 +281,11 @@ public class CloudSimTags {
 
 	public static final int RequestCreate = HDFSBASE + 2;
 
-	public static final int RequestExcute = HDFSBASE + 3;
+	public static final int CloudletExcute = HDFSBASE + 3;
+
+	public static final int MigrationCreate = HDFSBASE + 4;
+
+
 
 	/** Private Constructor. */
 	private CloudSimTags() {
