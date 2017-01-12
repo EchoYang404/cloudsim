@@ -10,10 +10,10 @@ public class BlockConfig {
 
     public BlockConfig(Block block)
     {
-        this.rackId = block.getStorage().getDatanode().getRackId();
-        this.datanodeId = block.getStorage().getDatanode().getId();
+        this.rackId = block.getDatanode().getRackId();
+        this.datanodeId = block.getDatanode().getId();
         this.size = block.getSize();
-        this.storageType = block.getStorage().getDatanode().getStorageTypeByBlockId(block.getId());
+        this.storageType = block.getDatanode().getStorageTypeByBlockId(block.getId());
     }
 
     public int getRackId() {

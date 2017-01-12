@@ -9,6 +9,7 @@ import org.bjut.hdfssim.models.Request.HCloudlet;
 import org.bjut.hdfssim.models.Request.MigrateCloudlet;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
 import org.bjut.hdfssim.models.Request.Request;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -50,11 +51,10 @@ public class HDFSDatacenter extends SimEntity {
             // 处理提交的Request
             case CloudSimTags.RequestCreate:
                 processRequestCreate(ev);
-                //updateCloudletProcessing();
                 break;
             case CloudSimTags.CloudletExcute:
-                    processCloudletExcute(ev);
-                    updateCloudletProcessing();
+                processCloudletExcute(ev);
+                updateCloudletProcessing();
                 break;
         }
     }
@@ -67,7 +67,6 @@ public class HDFSDatacenter extends SimEntity {
         allocateDatanode(request.getCurrentReadCloudlet(), request.getAddr());
         send(getId(), 0, CloudSimTags.CloudletExcute, request.getCurrentReadCloudlet());
     }
-
 
 
     private void allocateDatanode(HCloudlet cloudlet, Datanode addr) {
@@ -100,15 +99,15 @@ public class HDFSDatacenter extends SimEntity {
         while (iterator.hasNext()) {
             MigrateCloudlet mc = iterator.next();
             mc.start(CloudSim.clock());
-            // TODO 延迟执行
             allocateDatanode(mc, mc.getDestNode());
         }
     }
 
     protected void processCloudletExcute(SimEvent ev) {
-        if(isMigrate){
+        if (isMigrate) {
             checkMigartion(ev.eventTime());
         }
+
         //Log.printLine("time " + ev.eventTime());
         //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentCloudlet() + " " + result
         // .getRequest().getCurrentReadCloudlet().getCurrentStageType() + " " + result.getCurrentStage()

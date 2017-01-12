@@ -9,6 +9,7 @@ import java.util.List;
 
 public abstract class HCloudlet implements Comparable<HCloudlet> {
     private int blockId;
+    private Block block;
 
     private List<Block> blockList;
     //初始时未选择执行的host
@@ -100,9 +101,7 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public abstract void allocateHost(HDFSHost host);
 
-    protected void stop() {
-        this.getHost().getDatanode().finishAccessBlockById(this.getBlockId());
-    }
+    protected abstract void stop();
 
     public HDFSHost getHost() {
         return host;
@@ -150,6 +149,14 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
 
     public List<Block> getBlockList() {
         return blockList;
+    }
+
+    public Block getBlock() {
+        return block;
+    }
+
+    public void setBlock(Block block) {
+        this.block = block;
     }
 
     public void start(double startTime) {

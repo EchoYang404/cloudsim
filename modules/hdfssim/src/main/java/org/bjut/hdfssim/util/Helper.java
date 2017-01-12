@@ -51,7 +51,7 @@ public class Helper {
     public static void saveResult(List<Request> requestList, String path) {
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(new File(path)), ',');
-            String[] head = {"fileSize", "submitTime", "finishedTime", "useTime","=sum(D2:D" + (requestList.size() + 1) +")/" + getFinishedNum(requestList)};
+            String[] head = {"fileSize", "submitTime", "finishedTime", "useTime","=sum(D2:D" + (requestList.size() + 1) +")/" + requestList.size()};
             csvWriter.writeNext(head);
 
             Iterator<Request> iterator = requestList.iterator();

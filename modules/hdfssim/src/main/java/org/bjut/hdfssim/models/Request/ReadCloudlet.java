@@ -28,4 +28,9 @@ public class ReadCloudlet extends HCloudlet {
             this.setNetStage(new Stage(this.getBlockList().get(0).getSize()));
         }
     }
+
+    @Override
+    protected void stop() {
+        this.getHost().getDatanode().finishAccessBlock(this.getBlock());
+    }
 }

@@ -1,6 +1,7 @@
 package org.bjut.hdfssim.config;
 
 import com.google.gson.Gson;
+import org.bjut.hdfssim.Configuration;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.DatanodeType;
@@ -95,13 +96,13 @@ public class HDFSConfig {
         int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
         // TODO 读取请求均匀到达
         double submitTime = 0;
-
+        double interval = Configuration.getDoubleProperty("totalTime")/requestCount;
         Random random = new Random();
         for (int i = 0; i < requestCount; i++) {
             int rackId = random.nextInt(rackCount);
             this.requestConfigList.add(new RequestConfig(submitTime, rackId, namenode.getRandomDatanodeIdByRack
                     (rackId).getId(), 1 + random.nextInt(fileCount)));
-            submitTime += 2;
+            submitTime += interval;
         }
     }
 

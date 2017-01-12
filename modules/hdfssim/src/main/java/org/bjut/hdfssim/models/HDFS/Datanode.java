@@ -110,8 +110,8 @@ public class Datanode implements Serializable {
     }
 
     public int getStorageTypeByBlockId(int blockId) {
-        if (ssdStorage.hasBlock(blockId)) return Storage.SSD;
-        if (hddStorage.hasBlock(blockId)) return Storage.HDD;
+        if (ssdStorage.isContainBlock(blockId)) return Storage.SSD;
+        if (hddStorage.isContainBlock(blockId)) return Storage.HDD;
         return -1;
     }
 
@@ -139,11 +139,11 @@ public class Datanode implements Serializable {
         return ssdStorage.getUsedSize() / ssdStorage.getCapacity();
     }
 
-    private Block getBlockById(int blockId) {
+    public Block getBlockById(int blockId) {
         Block block = null;
-        if (ssdStorage.isContainBlock(blockId)) {
+        if (ssdStorage.isContainBlock(blockId) && !ssdStorage.getBlockById(blockId).isMigrate()) {
             block = ssdStorage.getBlockById(blockId);
-        } else if (hddStorage.isContainBlock(blockId)) {
+        } else if (hddStorage.isContainBlock(blockId) && !hddStorage.getBlockById(blockId).isMigrate()) {
             block = hddStorage.getBlockById(blockId);
         } else {
             try {
@@ -155,16 +155,19 @@ public class Datanode implements Serializable {
         return block;
     }
 
-    public void accessBlockById(int blockId, double time) {
-        this.info.accessBlock(this.getBlockById(blockId), time);
+    public void accessBlock(Block block, double time) {
+        this.info.accessBlock(block, time);
     }
 
-    public void finishAccessBlockById(int blockId)
-    {
-        this.info.finishAccessBlock(this.getBlockById(blockId));
+    public void finishAccessBlock(Block block) {
+        this.info.finishAccessBlock(block);
     }
 
     public DatanodeInfo getInfo() {
         return info;
+    }
+
+    public Storage getSsdStorage() {
+        return ssdStorage;
     }
 }

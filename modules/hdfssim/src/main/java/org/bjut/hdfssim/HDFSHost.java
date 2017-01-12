@@ -16,10 +16,7 @@ public class HDFSHost implements Serializable {
 
     private Datanode datanode;
 
-    // TODO 在执行的cloudlet列表
-    private List<HCloudlet> cloudletList;
-
-    // TODO 已完成的cloudlet列表
+    // 已完成的cloudlet列表
     private List<HCloudlet> finishedList;
 
     /**
@@ -44,13 +41,15 @@ public class HDFSHost implements Serializable {
 
     private List<ProvisionerForHDFS> peProvisionerList;
 
-    public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum, double mips) {
+    public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum,
+                    double mips) {
         this.id = datanode.getId();
         this.datanode = datanode;
         this.ssdProvisioner = new ProvisionerForHDFS(ssdMaxTransferRate, HCloudlet.DISK);
         this.hddProvisioner = new ProvisionerForHDFS(hddMaxTransferRate, HCloudlet.DISK);
         this.bwProvisioner = new ProvisionerForHDFS(bw, HCloudlet.BW);
-        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"), HCloudlet.NET);
+        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"),
+                HCloudlet.NET);
         this.peProvisionerList = new ArrayList<>();
         for (int i = 0; i < coreNum; i++) {
             peProvisionerList.add(new ProvisionerForHDFS(mips, HCloudlet.CPU));
@@ -69,7 +68,13 @@ public class HDFSHost implements Serializable {
             }
         }
         pe.addCloudlet(cloudlet, time);
-        this.getDatanode().accessBlockById(cloudlet.getBlockId(), time);
+        Block block = this.getDatanode().getBlockById(cloudlet.getBlockId());
+        if (cloudlet.getClass() == ReadCloudlet.class) {
+            cloudlet.setBlock(block);
+        }
+
+        this.getDatanode().accessBlock(block, time);
+
     }
 
     public SortedSet<HCloudlet> excuteCloudlets(double time) {
@@ -245,18 +250,15 @@ public class HDFSHost implements Serializable {
         return 1 / bwProvisioner.getCurrentNum();
     }
 
-    public double getBw()
-    {
+    public double getBw() {
         return this.bwProvisioner.getCapacity();
     }
 
-    public int getCoreNum()
-    {
+    public int getCoreNum() {
         return this.peProvisionerList.size();
     }
 
-    public double getMips()
-    {
+    public double getMips() {
         return this.peProvisionerList.get(0).getCapacity();
     }
 }

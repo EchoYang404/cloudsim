@@ -31,7 +31,7 @@ public class HdfssimTest {
 
     @Test
     public void testCreateConfig() throws Exception {
-        CreateConfig.excute(Helper.getConfigPath(name),100,100);
+        CreateConfig.excute(Helper.getConfigPath(name),100,200);
     }
 
     @Test

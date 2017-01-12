@@ -20,8 +20,8 @@ public class LoadDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
                 continue;
             }
 
-            HDFSHost host = block.getStorage().getDatanode().getHost();
-            double distance = addr.getDistance(block.getStorage().getDatanode());
+            HDFSHost host = block.getDatanode().getHost();
+            double distance = addr.getDistance(block.getDatanode());
             //double tmp = 0.313 * (4 - distance) / 4 + 0.313 * host.getBwUtilization() + 0.5506 * host
             // .getDiskUtilization(block)/300 + 0.0935 * host
             // .getCpuUtilization();
@@ -33,7 +33,7 @@ public class LoadDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
         double select = new Random().nextDouble();
         for (int i = 0; i < list.size(); i++) {
             if ((list.get(i) / sum) > select) {
-                return blockList.get(i).getStorage().getDatanode();
+                return blockList.get(i).getDatanode();
             }
         }
         return null;

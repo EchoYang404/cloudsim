@@ -19,13 +19,12 @@ public class DefaultDatanodeAllocationPolicy implements DatanodeAllocationPolicy
             if (block.isMigrate()) {
                 continue;
             }
-            distance = addr.getDistance(block.getStorage().getDatanode());
-//            if (distance == minDis && new Random().nextInt(100) < 50) {
-//                datanode = block.getStorage().getDatanode();
-//            } else
-            if (distance <= minDis) {
+            distance = addr.getDistance(block.getDatanode());
+            if (distance == minDis && new Random().nextInt(100) < 70) {
                 datanode = block.getStorage().getDatanode();
-                minDis = addr.getDistance(block.getStorage().getDatanode());
+            } else if (distance < minDis) {
+                datanode = block.getDatanode();
+                minDis = addr.getDistance(block.getDatanode());
             }
         }
         return datanode;

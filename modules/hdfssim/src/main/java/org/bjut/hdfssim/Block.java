@@ -1,5 +1,6 @@
 package org.bjut.hdfssim;
 
+import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.util.Id;
 
 import java.io.Serializable;
@@ -38,13 +39,35 @@ public class Block implements Serializable {
         return storage;
     }
 
-    public int getTotalNumOfRack() {
+    public Datanode getDatanode(){
+        return this.getStorage().getDatanode();
+    }
+
+    public Set<Integer> getAllRacks() {
         Iterator<Block> blockIterator = hFile.getReplicaListById(this.id).iterator();
         Set<Integer> racks = new HashSet<>();
         while (blockIterator.hasNext()) {
-            racks.add(blockIterator.next().getStorage().getDatanode().getRackId());
+            racks.add(blockIterator.next().getDatanode().getRackId());
         }
-        return racks.size();
+        return racks;
+    }
+
+    public int getThisRackBlockNum()
+    {
+        Iterator<Block> blockIterator = hFile.getReplicaListById(this.id).iterator();
+        int num = 0;
+        while (blockIterator.hasNext()) {
+            Block block = blockIterator.next();
+            if(block.isMigrate()){
+                continue;
+            }
+            else {
+                if(this.getDatanode().getRackId() == block.getDatanode().getRackId()){
+                    num++;
+                }
+            }
+        }
+        return num;
     }
 
     public HFile gethFile() {

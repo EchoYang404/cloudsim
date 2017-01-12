@@ -87,13 +87,6 @@ public class Storage implements Serializable {
         return this.usedSize;
     }
 
-    public boolean hasBlock(int blockId) {
-        if (blockList.containsKey(blockId)) {
-            return true;
-        }
-        return false;
-    }
-
     public void reset()
     {
         this.usedSize = 0;
