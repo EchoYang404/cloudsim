@@ -148,7 +148,7 @@ public class DatanodeInfo {
         }
         ValueComparator vc = new ValueComparator(ssdHistory);
         TreeMap<Block, List<Double>> sorted_map = new TreeMap<>(vc);
-
+        sorted_map.putAll(ssdHistory);
         double migrateSpace = this.datanode.getSsdStorage().getUsedSize() - this.datanode.getSsdStorage().getCapacity() * Configuration.getDoubleProperty("threshold") / 2;
 
         Iterator<Block> blockIterator = sorted_map.keySet().iterator();

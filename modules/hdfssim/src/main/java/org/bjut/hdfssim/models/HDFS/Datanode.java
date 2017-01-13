@@ -68,7 +68,6 @@ public class Datanode implements Serializable {
 
     public List<Double> deleteBlock(Block block) {
         int type = block.getStorage().getType();
-        block.getStorage().deleteBlock(block);
         if (type == Storage.SSD) {
             return this.info.deleteSsdBlock(block);
         } else {

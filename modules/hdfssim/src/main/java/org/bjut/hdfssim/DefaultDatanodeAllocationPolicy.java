@@ -20,7 +20,7 @@ public class DefaultDatanodeAllocationPolicy implements DatanodeAllocationPolicy
                 continue;
             }
             distance = addr.getDistance(block.getDatanode());
-            if (distance == minDis && new Random().nextInt(100) < 70) {
+            if (distance == minDis && new Random().nextDouble() <= 0.8) {
                 datanode = block.getStorage().getDatanode();
             } else if (distance < minDis) {
                 datanode = block.getDatanode();

@@ -88,15 +88,17 @@ public class Migrationer {
 
     private MigrateCloudlet createMigrateCloudlet(Block block, Datanode datanode, int toType)
     {
-        block.gethFile().addBlock(block.getId(), block.getSize(), datanode, toType, block.getDatanode().getInfo()
-                .deleteHddBlock(block));
-        return new MigrateCloudlet(block.getId(), block, block.getDatanode(), toType);
+        block.gethFile().addBlock(block.getId(), block.getSize(), datanode, toType, block.getDatanode().deleteBlock(block));
+        return new MigrateCloudlet(block.getId(), block, datanode, toType);
     }
 
+    // 跨节点迁移
     private List<MigrateCloudlet> remoteMigrate(Datanode datanode, double time) {
         List<MigrateCloudlet> cloudletList = new ArrayList<>();
         List<Block> blockList = datanode.getInfo().getRemoteFromSsd(time);
-
+        if(blockList.isEmpty()){
+            return cloudletList;
+        }
         int particleNum = Configuration.getIntProperty("particleNum");
         int iterations = Configuration.getIntProperty("iterations");
 
@@ -104,8 +106,11 @@ public class Migrationer {
         List<Particle> particles = new ArrayList<>(particleNum);
         List<Datanode> gBest = new ArrayList<>();
         double gBestFitValue = Double.MAX_VALUE;
+        // List中，下标0为当前Datanode的SSD使用量，1为SSD总量，2为计算量
+        Map<Datanode,List<Double>> datanodeSsdUsage = new HashMap<>();
+        double avgUsage = getDatanodeSsdUsage(datanodeSsdUsage, datanode, blockList);
         for(int i = 0; i < particleNum; i++){
-            particles.add(new Particle(blockList));
+            particles.add(new Particle(blockList,datanodeSsdUsage,avgUsage));
         }
         // 计算所有粒子的适应度值，更新自身的最佳位置与集群位置
         for(int i = 0; i < particleNum; i++){
@@ -142,14 +147,21 @@ public class Migrationer {
 
     private class Particle implements Cloneable{
         private List<Datanode> position;
+        private Map<Datanode,List<Double>> ssdUsages;
+        private double avgUsage;
+        private List<Block> blockList;
         private double fitValue;
 
         private List<Datanode> pBest;
         private double bestFitValue;
 
-        public Particle(List<Block> blockList){
+        public Particle(List<Block> blockList, Map<Datanode,List<Double>> ssdUsages, double avgUsage){
             position = new ArrayList<>();
             pBest = new ArrayList<>();
+            this.ssdUsages = ssdUsages;
+            this.blockList = blockList;
+            this.avgUsage = avgUsage;
+
             for(int i = 0; i < blockList.size();i++){
                 position.add(getAvailableDatanode(blockList.get(i)));
             }
@@ -178,6 +190,12 @@ public class Migrationer {
                     p1.set(i,p2.get(i));
                     p2.set(i,tmp);
                 }
+                if(random.nextDouble() >= pMutation){
+                    p1.set(i,getAvailableDatanode(blockList.get(i)));
+                }
+                if(random.nextDouble() >= pMutation){
+                    p2.set(i,getAvailableDatanode(blockList.get(i)));
+                }
             }
 
             double fit1 = calFitValue(p1);
@@ -198,9 +216,31 @@ public class Migrationer {
             }
         }
 
-        private double calFitValue(List<Datanode> position) {
+        private double calFitValue(List<Datanode> p) {
             // TODO 计算适应度值
-            return -1;
+            double firstPart = 0, secondPart = 0;
+            // 更新迁移后状态
+            for (int i = 0; i < p.size(); i++) {
+                double preUsage = ssdUsages.get(p.get(i)).get(0);
+                ssdUsages.get(p.get(i)).set(0,preUsage+blockList.get(i).getSize());
+                ssdUsages.get(p.get(i)).set(2,Math.pow(avgUsage - ssdUsages.get(p.get(i)).get(0)/ ssdUsages.get(p.get(i)).get(1),2));
+                secondPart += getChangeLevel(blockList.get(i), p.get(i));
+            }
+            Iterator<List<Double>> listIterator = ssdUsages.values().iterator();
+            while (listIterator.hasNext()){
+                List<Double> list = listIterator.next();
+                firstPart += list.get(2);
+            }
+            firstPart /= ssdUsages.size();
+            secondPart/= (8 * p.size());
+            // 恢复原状态
+            for (int i = 0; i < p.size(); i++) {
+                double preUsage = ssdUsages.get(p.get(i)).get(0);
+                ssdUsages.get(p.get(i)).set(0,preUsage-blockList.get(i).getSize());
+                ssdUsages.get(p.get(i)).set(2,Math.pow(avgUsage - ssdUsages.get(p.get(i)).get(0)/ ssdUsages.get(p.get(i)).get(1),2));
+            }
+
+            return firstPart + secondPart;
         }
 
         public List<Datanode> getPosition() {
@@ -223,6 +263,40 @@ public class Migrationer {
             p.position.addAll(this.position);
             return p;
         }
+    }
+
+    private double getDatanodeSsdUsage(Map<Datanode, List<Double>> usage, Datanode datanode, List<Block> blockList){
+        double totalUsage = 0, totalSize = 0;
+        Iterator<List<Datanode>> rackIterator = namenode.getDatanodeList().values().iterator();
+        while (rackIterator.hasNext()){
+            Iterator<Datanode> iterator = rackIterator.next().iterator();
+            while (iterator.hasNext()){
+                Datanode next = iterator.next();
+                List<Double> ssdUage = new ArrayList<>();
+                ssdUage.add(next.getSsdStorage().getUsedSize());
+                ssdUage.add(next.getSsdStorage().getCapacity());
+                totalUsage += ssdUage.get(0);
+                totalSize += ssdUage.get(1);
+                usage.put(next,ssdUage);
+            }
+        }
+        double avgUsage = totalUsage/totalSize;
+        Iterator<List<Double>> listIterator = usage.values().iterator();
+        while (listIterator.hasNext()){
+            List<Double> list = listIterator.next();
+            list.add(Math.pow(avgUsage - list.get(0)/list.get(1),2));
+        }
+
+        Iterator<Block> blockIterator = blockList.iterator();
+        double migrateSize = 0;
+        while (blockIterator.hasNext()){
+            Block block = blockIterator.next();
+            migrateSize += block.getSize();
+        }
+        double preUsage = usage.get(datanode).get(0);
+        usage.get(datanode).set(0,preUsage - migrateSize);
+        usage.get(datanode).set(2,Math.pow(avgUsage - usage.get(datanode).get(0)/usage.get(datanode).get(1),2));
+        return avgUsage;
     }
 
     private Datanode getAvailableDatanode(Block block){
@@ -262,5 +336,16 @@ public class Migrationer {
                 return destNode;
             }
         }
+    }
+
+    private int getChangeLevel(Block block, Datanode datanode){
+        if(block.getDatanode().getRackId() == datanode.getRackId()){
+            return 0;
+        }
+        Set<Integer> rackSet = block.getAllRacks();
+        if(rackSet.contains(datanode.getRackId())){
+            return 4;
+        }
+        return 8;
     }
 }
