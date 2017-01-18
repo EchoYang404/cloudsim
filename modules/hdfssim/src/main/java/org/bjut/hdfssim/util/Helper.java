@@ -134,4 +134,16 @@ public class Helper {
     public static String getConfigPath(String name) {
         return Configuration.getBasePath() + name + ".json";
     }
+
+    public static int getPosionNum(double lamda, int x, int totalNum) {
+        return (int) Math.ceil(Math.pow(lamda, x) * Math.exp(-lamda) / fact(x) * totalNum);
+    }
+
+    private static int fact(int n) {
+        if (n <= 1) {
+            return 1;
+        } else {
+            return n * fact(n - 1);
+        }
+    }
 }

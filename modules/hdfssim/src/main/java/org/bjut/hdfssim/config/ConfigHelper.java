@@ -71,30 +71,5 @@ public class ConfigHelper {
         config.getRackConfigList().add(new RackConfig(4, 3, 5));
         config.getRackConfigList().add(new RackConfig(4, 5, 5));
         config.getRackConfigList().add(new RackConfig(4, 7, 5));
-
-        //        config.datanodeConfigList.add(new RackConfig(5,2,5));
-//        config.datanodeConfigList.add(new RackConfig(5,4,5));
-//        config.datanodeConfigList.add(new RackConfig(5,6,5));
-//        config.datanodeConfigList.add(new RackConfig(5,8,5));
-//
-//        config.datanodeConfigList.add(new RackConfig(6,1,5));
-//        config.datanodeConfigList.add(new RackConfig(6,3,5));
-//        config.datanodeConfigList.add(new RackConfig(6,5,5));
-//        config.datanodeConfigList.add(new RackConfig(6,7,5));
-//
-//        config.datanodeConfigList.add(new RackConfig(7,2,5));
-//        config.datanodeConfigList.add(new RackConfig(7,4,5));
-//        config.datanodeConfigList.add(new RackConfig(7,6,5));
-//        config.datanodeConfigList.add(new RackConfig(7,8,5));
-//
-//        config.datanodeConfigList.add(new RackConfig(8,1,5));
-//        config.datanodeConfigList.add(new RackConfig(8,3,5));
-//        config.datanodeConfigList.add(new RackConfig(8,5,5));
-//        config.datanodeConfigList.add(new RackConfig(8,7,5));
-//
-//        config.datanodeConfigList.add(new RackConfig(9,2,5));
-//        config.datanodeConfigList.add(new RackConfig(9,4,5));
-//        config.datanodeConfigList.add(new RackConfig(9,6,5));
-//        config.datanodeConfigList.add(new RackConfig(9,8,5));
     }
 }

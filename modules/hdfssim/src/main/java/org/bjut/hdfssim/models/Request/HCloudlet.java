@@ -171,6 +171,9 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
     @Override
     public int compareTo(HCloudlet o) {
         double thisTime, oTime;
+        if(this == o){
+            return 0;
+        }
         if (this.getCurrentStage() == null) {
             thisTime = this.getFinishedTime();
         } else {
@@ -182,9 +185,7 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
             oTime = o.getCurrentStage().getNextStartTime();
         }
 
-        if (thisTime == oTime) {
-            return 0;
-        } else if (thisTime < oTime) {
+        if (thisTime < oTime) {
             return -1;
         }
         return 1;

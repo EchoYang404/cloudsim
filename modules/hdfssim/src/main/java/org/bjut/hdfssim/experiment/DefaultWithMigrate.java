@@ -19,7 +19,7 @@ public class DefaultWithMigrate {
             return;
         }
         String path = args[0];
-        //String path = "D:\\projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_64.0_3_10_1484561220262.json";
+        //String path = "D:\\projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_128.0_3_100_1484715909676.json";
         System.out.println(path);
         // First step : Create namenode
         Namenode namenode = new Namenode();

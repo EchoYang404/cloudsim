@@ -26,9 +26,9 @@ public class Stage {
 
         double t = time - nextStartTime;
         double tmpTime = nextStartTime + restLength / speed;
-        if(Math.abs(time - tmpTime) < Configuration.getDoubleProperty("precision") || tmpTime < time)
+        if(Math.abs(time - tmpTime) <= Configuration.getDoubleProperty("precision") || tmpTime <= time)
         {
-            finishedTime = nextStartTime + restLength / speed;
+            finishedTime = tmpTime;
             restLength = 0;
             isFinished = true;
         }

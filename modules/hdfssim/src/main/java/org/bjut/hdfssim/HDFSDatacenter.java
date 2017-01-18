@@ -24,7 +24,6 @@ public class HDFSDatacenter extends SimEntity {
     private DatanodeAllocationPolicy policy;
     private Migrationer migrationer;
     private boolean isMigrate;
-    private double lastTime;
 
     public HDFSDatacenter(String name, Namenode namenode, DatanodeAllocationPolicy policy, boolean isMigrate) {
         super(name);
@@ -33,7 +32,6 @@ public class HDFSDatacenter extends SimEntity {
         this.policy = policy;
         this.migrationer = new Migrationer(namenode);
         this.isMigrate = isMigrate;
-        this.lastTime = 0;
     }
 
     @Override
@@ -49,10 +47,6 @@ public class HDFSDatacenter extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
-//        if(ev.eventTime() - lastTime > 1000){
-//            lastTime = ev.eventTime();
-//            Log.printLine(lastTime);
-//        }
         switch (ev.getTag()) {
             // 处理提交的Request
             case CloudSimTags.RequestCreate:
@@ -123,7 +117,8 @@ public class HDFSDatacenter extends SimEntity {
         while (iterator.hasNext()) {
             HDFSHost host = iterator.next();
             // 执行time之前的所有任务
-            completeList.addAll(host.excuteCloudlets(ev.eventTime()));
+            SortedSet<HCloudlet> tmp = host.excuteCloudlets(ev.eventTime());
+            completeList.addAll(tmp);
         }
         Iterator<HCloudlet> cloudletIterator = completeList.iterator();
         while (cloudletIterator.hasNext()) {
@@ -132,7 +127,7 @@ public class HDFSDatacenter extends SimEntity {
                 Request r = ((ReadCloudlet) c).getRequest();
                 if (r.toNext()) {
                     allocateDatanode(r.getCurrentReadCloudlet(), r.getAddr());
-                    send(getId(), 0, CloudSimTags.CloudletExcute, r.getCurrentReadCloudlet());
+                    //send(getId(), 0, CloudSimTags.CloudletExcute, r.getCurrentReadCloudlet());
                 }
             }
         }

@@ -7,6 +7,7 @@ import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.HDFS.DatanodeType;
 import org.bjut.hdfssim.models.HDFS.Namenode;
 import org.bjut.hdfssim.models.Request.Request;
+import org.bjut.hdfssim.util.Helper;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -110,20 +111,49 @@ public class HDFSConfig {
     }
 
     // 根据namenode中已有的Datanode与HFile，创建RequestConfig
+//    public void setRequestConfigList(Namenode namenode, int requestCount) {
+//        //List<Request> requestList = new ArrayList<>();
+//        int rackCount = namenode.getDatanodeList().size();
+//        // TODO 访问的文件范围
+//        int fileCount = 150;
+//        //int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
+//        // TODO 读取请求均匀到达
+//        double submitTime = 0;
+//        double interval = Configuration.getDoubleProperty("totalTime")/requestCount;
+//        Random random = new Random();
+//        for (int i = 0; i < requestCount; i++) {
+//            int rackId = random.nextInt(rackCount);
+//            this.requestConfigList.add(new RequestConfig(submitTime, rackId, namenode.getRandomDatanodeIdByRack
+//                    (rackId).getId(), 1 + random.nextInt(fileCount)));
+//            submitTime += interval;
+//        }
+//    }
+
     public void setRequestConfigList(Namenode namenode, int requestCount) {
-        //List<Request> requestList = new ArrayList<>();
         int rackCount = namenode.getDatanodeList().size();
         // TODO 访问的文件范围
         int fileCount = 150;
         //int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
-        // TODO 读取请求均匀到达
         double submitTime = 0;
-        double interval = Configuration.getDoubleProperty("totalTime")/requestCount;
-        Random random = new Random();
-        for (int i = 0; i < requestCount; i++) {
-            int rackId = random.nextInt(rackCount);
-            this.requestConfigList.add(new RequestConfig(submitTime, rackId, namenode.getRandomDatanodeIdByRack
-                    (rackId).getId(), 1 + random.nextInt(fileCount)));
+        double interval = Configuration.getDoubleProperty("ArriveInterval");
+        double lamda = Configuration.getDoubleProperty("lamda");
+        int restCount = requestCount;
+        int x = 0;
+        while (restCount > 0){
+            int num = Helper.getPosionNum(lamda,x,requestCount);
+            x++;
+            if(num > restCount){
+                num = restCount;
+                restCount = 0;
+            }else {
+                restCount -= num;
+            }
+            Random random = new Random();
+            for (int i = 0; i < num; i++) {
+                int rackId = random.nextInt(rackCount);
+                this.requestConfigList.add(new RequestConfig(submitTime, rackId, namenode.getRandomDatanodeIdByRack
+                        (rackId).getId(), 1 + random.nextInt(fileCount)));
+            }
             submitTime += interval;
         }
     }

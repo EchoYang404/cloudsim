@@ -20,7 +20,7 @@ public class Default {
             return;
         }
         String path = args[0];
-//        String path = "D:\\projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_128.0_3_100_1484654609158.json";
+        //String path = "D:\\projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_128.0_3_5_1484714596778.json";
         System.out.println(path);
         // First step : Create namenode
         Namenode namenode = new Namenode();

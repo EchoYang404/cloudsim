@@ -49,9 +49,7 @@ public class ProvisionerForHDFS implements Serializable {
             HCloudlet cloudlet = iterator.next();
 
             cloudlet.getCurrentStage().excute(time, speed);
-
-            double finishedTime = cloudlet.getCurrentStage().getFinishedTime();
-            if (Math.abs(finishedTime - time) < Configuration.getDoubleProperty("precision") || finishedTime < time) {
+            if (cloudlet.getCurrentStage().isFinished()) {
                 finished.add(cloudlet);
                 iterator.remove();
                 currentNum--;

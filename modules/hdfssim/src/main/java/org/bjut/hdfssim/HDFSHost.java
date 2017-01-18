@@ -182,6 +182,9 @@ public class HDFSHost implements Serializable {
 
         // 任务跳转至下下一阶段，并添加至provisioner中
         cloudlet.toNextStage();
+        if(cloudlet.getCurrentStage() == null){
+            return;
+        }
         cloudlet.getCurrentStage().start(startTime);
         netProvisioner.addCloudlet(cloudlet, startTime);
     }
