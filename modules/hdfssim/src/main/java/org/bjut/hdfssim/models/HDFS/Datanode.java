@@ -21,7 +21,7 @@ public class Datanode implements Serializable {
 
     public Datanode(int rackId, double hddCapacity, double hddMaxTransferRate, double ssdCapacity, double
             ssdMaxTransferRate, double bw, int coreNum, double mips) {
-        this.id = Id.pollId(Datanode.class);
+        this.id = Id.pollId(this.getClass());
         this.rackId = rackId;
         this.hddStorage = new Storage(this, hddMaxTransferRate, hddCapacity, Storage.SSD);
         this.ssdStorage = new Storage(this, ssdMaxTransferRate, ssdCapacity, Storage.HDD);
@@ -168,5 +168,9 @@ public class Datanode implements Serializable {
 
     public Storage getSsdStorage() {
         return ssdStorage;
+    }
+
+    public Storage getHddStorage() {
+        return hddStorage;
     }
 }

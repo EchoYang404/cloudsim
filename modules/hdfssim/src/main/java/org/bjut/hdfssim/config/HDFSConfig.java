@@ -18,6 +18,8 @@ import java.util.Random;
 
 
 public class HDFSConfig {
+    private double blockSize;
+    private int replicaCount;
 
     private List<DatanodeType> datanodeTypeList;
     private List<RackConfig> rackConfigList;
@@ -37,14 +39,30 @@ public class HDFSConfig {
         requestConfigList = new ArrayList<>();
     }
 
+    public void setBlockSize(double blockSize) {
+        this.blockSize = blockSize;
+    }
+
+    public void setReplicaCount(int replicaCount) {
+        this.replicaCount = replicaCount;
+    }
+
+    public double getBlockSize() {
+        return blockSize;
+    }
+
+    public int getReplicaCount() {
+        return replicaCount;
+    }
+
     // 根据 DatanodeType与RackConfig 创建Datanode并添加至namenode
     public void createDatanodeList(Namenode namenode) {
         Iterator<RackConfig> configIterator = rackConfigList.iterator();
         while (configIterator.hasNext()) {
-            RackConfig dc = configIterator.next();
-            DatanodeType dt = datanodeTypeList.get(dc.getTypeNum());
-            for (int i = 0; i < dc.getCount(); i++) {
-                namenode.addDatanode(new Datanode(dc.getRackId(), dt.hddCapacity, dt.hddMaxTransferRate, dt.ssdCapacity,
+            RackConfig rc = configIterator.next();
+            DatanodeType dt = datanodeTypeList.get(rc.getTypeNum());
+            for (int i = 0; i < rc.getCount(); i++) {
+                namenode.addDatanode(new Datanode(rc.getRackId(), dt.hddCapacity, dt.hddMaxTransferRate, dt.ssdCapacity,
                         dt.ssdMaxTransferRate, dt.bw, dt.cores, dt.mips));
             }
         }
@@ -78,6 +96,8 @@ public class HDFSConfig {
                 this.datanodeConfigList.add(new DatanodeConfig(datanode));
             }
         }
+        this.blockSize = namenode.getBlockSize();
+        this.replicaCount = namenode.getReplicaCount();
     }
 
     // 根据namenode中已有的HFile，创建HFileConfig
@@ -93,7 +113,9 @@ public class HDFSConfig {
     public void setRequestConfigList(Namenode namenode, int requestCount) {
         //List<Request> requestList = new ArrayList<>();
         int rackCount = namenode.getDatanodeList().size();
-        int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
+        // TODO 访问的文件范围
+        int fileCount = 150;
+        //int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
         // TODO 读取请求均匀到达
         double submitTime = 0;
         double interval = Configuration.getDoubleProperty("totalTime")/requestCount;
@@ -123,10 +145,21 @@ public class HDFSConfig {
     public void writeToFile(String path) {
         Gson gson = new Gson();
         try {
-            FileWriter fw = new FileWriter(new File(path));
+            File file = new File(path);
+            if(!file.getParentFile().exists()) {
+                //如果目标文件所在的目录不存在，则创建父目录
+                System.out.println("目标文件所在目录不存在，准备创建它！");
+                if(!file.getParentFile().mkdirs()) {
+                    throw new Exception("创建目标文件所在目录失败！");
+                }
+            }
+            FileWriter fw = new FileWriter(file);
+            String res = gson.toJson(this);
             fw.write(gson.toJson(this));
             fw.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

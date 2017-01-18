@@ -16,6 +16,9 @@ public class HDFSHost implements Serializable {
 
     private Datanode datanode;
 
+    // cloudlet列表
+    private List<HCloudlet> cloudletList;
+
     // 已完成的cloudlet列表
     private List<HCloudlet> finishedList;
 
@@ -54,6 +57,7 @@ public class HDFSHost implements Serializable {
         for (int i = 0; i < coreNum; i++) {
             peProvisionerList.add(new ProvisionerForHDFS(mips, HCloudlet.CPU));
         }
+        this.cloudletList = new ArrayList<>();
         this.finishedList = new ArrayList<>();
     }
 
@@ -68,19 +72,18 @@ public class HDFSHost implements Serializable {
             }
         }
         pe.addCloudlet(cloudlet, time);
-        Block block = this.getDatanode().getBlockById(cloudlet.getBlockId());
         if (cloudlet.getClass() == ReadCloudlet.class) {
+            Block block = this.getDatanode().getBlockById(cloudlet.getBlockId());
             cloudlet.setBlock(block);
+            this.getDatanode().accessBlock(block, time);
         }
 
-        this.getDatanode().accessBlock(block, time);
-
+        this.cloudletList.add(cloudlet);
     }
 
     public SortedSet<HCloudlet> excuteCloudlets(double time) {
-
         SortedSet<HCloudlet> completeList = new TreeSet<>();
-        // excute all cpus cloudlets
+        // createExConfig all cpus cloudlets
         for (ProvisionerForHDFS provisioner : peProvisionerList) {
             completeList.addAll(provisioner.excuteCloudlets(time));
         }
@@ -90,7 +93,7 @@ public class HDFSHost implements Serializable {
             excuteFinishedCPUCloudlet(c);
             iterator.remove();
         }
-        // excute all disk cloudlets
+        // createExConfig all disk cloudlets
         completeList.addAll(ssdProvisioner.excuteCloudlets(time));
         completeList.addAll(hddProvisioner.excuteCloudlets(time));
         iterator = completeList.iterator();
@@ -100,7 +103,7 @@ public class HDFSHost implements Serializable {
             iterator.remove();
         }
 
-        // excute all bw cloudlets
+        // createExConfig all bw cloudlets
         completeList.addAll(bwProvisioner.excuteCloudlets(time));
 
         iterator = completeList.iterator();
@@ -115,6 +118,16 @@ public class HDFSHost implements Serializable {
         completeList.addAll(netProvisioner.excuteCloudlets(time));
         completeList.addAll(this.finishedList);
         this.finishedList.clear();
+
+        iterator = cloudletList.iterator();
+        while (iterator.hasNext()){
+            HCloudlet c = iterator.next();
+            if(c.isFinished()){
+                completeList.add(c);
+                iterator.remove();
+            }
+        }
+
         return completeList;
     }
 

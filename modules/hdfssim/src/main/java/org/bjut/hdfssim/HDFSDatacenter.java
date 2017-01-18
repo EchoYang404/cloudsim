@@ -24,6 +24,7 @@ public class HDFSDatacenter extends SimEntity {
     private DatanodeAllocationPolicy policy;
     private Migrationer migrationer;
     private boolean isMigrate;
+    private double lastTime;
 
     public HDFSDatacenter(String name, Namenode namenode, DatanodeAllocationPolicy policy, boolean isMigrate) {
         super(name);
@@ -32,6 +33,7 @@ public class HDFSDatacenter extends SimEntity {
         this.policy = policy;
         this.migrationer = new Migrationer(namenode);
         this.isMigrate = isMigrate;
+        this.lastTime = 0;
     }
 
     @Override
@@ -47,6 +49,10 @@ public class HDFSDatacenter extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
+//        if(ev.eventTime() - lastTime > 1000){
+//            lastTime = ev.eventTime();
+//            Log.printLine(lastTime);
+//        }
         switch (ev.getTag()) {
             // 处理提交的Request
             case CloudSimTags.RequestCreate:
@@ -76,16 +82,16 @@ public class HDFSDatacenter extends SimEntity {
 
     protected void updateCloudletProcessing() {
         HCloudlet result = null;
-        double time = Double.MAX_VALUE;
+        double minTime = Double.MAX_VALUE;
 
         Iterator<HDFSHost> iterator = hostList.values().iterator();
         while (iterator.hasNext()) {
             HDFSHost host = iterator.next();
             // 尝试执行所有任务，找到当前阶段（CPU,Disk,BW,NET）执行时间最小的任务
             HCloudlet tmp = host.tryExcuteCloudlets();
-            if (tmp != null && tmp.getCurrentStage().getPredictTime() < time) {
+            if (tmp != null && tmp.getCurrentStage().getPredictTime() < minTime) {
                 result = tmp;
-                time = tmp.getCurrentStage().getPredictTime();
+                minTime = tmp.getCurrentStage().getPredictTime();
             }
         }
         if (result != null) {
@@ -109,7 +115,7 @@ public class HDFSDatacenter extends SimEntity {
         }
 
         //Log.printLine("time " + ev.eventTime());
-        //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentCloudlet() + " " + result
+        //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentNum() + " " + result
         // .getRequest().getCurrentReadCloudlet().getCurrentStageType() + " " + result.getCurrentStage()
         // .getPredictTime());
         Iterator<HDFSHost> iterator = hostList.values().iterator();
@@ -123,10 +129,10 @@ public class HDFSDatacenter extends SimEntity {
         while (cloudletIterator.hasNext()) {
             HCloudlet c = cloudletIterator.next();
             if (c.getClass() == ReadCloudlet.class) {
-                ReadCloudlet rc = (ReadCloudlet) c;
-                if (rc.getRequest().toNext()) {
-                    allocateDatanode(rc.getRequest().getCurrentReadCloudlet(), ((ReadCloudlet) c).getRequest()
-                            .getAddr());
+                Request r = ((ReadCloudlet) c).getRequest();
+                if (r.toNext()) {
+                    allocateDatanode(r.getCurrentReadCloudlet(), r.getAddr());
+                    send(getId(), 0, CloudSimTags.CloudletExcute, r.getCurrentReadCloudlet());
                 }
             }
         }

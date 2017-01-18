@@ -164,6 +164,10 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
         this.setStarted(true);
     }
 
+    public boolean isFinished() {
+        return isFinished;
+    }
+
     @Override
     public int compareTo(HCloudlet o) {
         double thisTime, oTime;

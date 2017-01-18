@@ -2,10 +2,7 @@ package org.bjut.hdfssim.util;
 import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HFile;
 
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.Request.Request;
@@ -78,5 +75,13 @@ public final class Id {
     public static synchronized int getId(final Class<?> clazz)
     {
         return COUNTERS.get(clazz);
+    }
+
+    public static synchronized void reset(){
+        Iterator<Class<?>> iterator = COUNTERS.keySet().iterator();
+        while (iterator.hasNext()){
+            Class<?> c = iterator.next();
+            COUNTERS.put(c,1);
+        }
     }
 }

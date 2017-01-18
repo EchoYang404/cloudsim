@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class LoadDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
+public class SelectDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
     //    @Override
     public Datanode getDatanode(List<Block> blockList, Datanode addr) {
         Iterator<Block> iterator = blockList.iterator();

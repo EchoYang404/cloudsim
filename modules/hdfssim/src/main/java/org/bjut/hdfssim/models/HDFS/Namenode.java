@@ -14,12 +14,16 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Namenode implements Serializable {
-    private double blockSize = 64;
-    private int replicaCount = 3;
-    private List<HFile> HFileList = new ArrayList<>();
-    private Map<Integer, List<Datanode>> datanodeList = new HashMap<>(); // Map<rackId, List<datanode>>
+    private double blockSize;
+    private int replicaCount;
+    private List<HFile> HFileList;
+    private Map<Integer, List<Datanode>> datanodeList; // Map<rackId, List<datanode>>
 
     public Namenode() {
+        blockSize = 64;
+        replicaCount = 3;
+        HFileList = new ArrayList<>();
+        datanodeList = new HashMap<>();
     }
 
     public double getBlockSize() {
@@ -28,6 +32,14 @@ public class Namenode implements Serializable {
 
     public int getReplicaCount() {
         return replicaCount;
+    }
+
+    public void setBlockSize(double blockSize) {
+        this.blockSize = blockSize;
+    }
+
+    public void setReplicaCount(int replicaCount) {
+        this.replicaCount = replicaCount;
     }
 
     public void addDatanode(Datanode datanode) {
@@ -80,7 +92,7 @@ public class Namenode implements Serializable {
 
         Iterator<Block> blockIterator = replicaList.iterator();
         // add first block
-        type = uploadBlockToRack(blockIterator.next(), rackId, ssdNum);
+        type = uploadBlockToRack(blockIterator.next(), rackId, 0);
         if (type == Storage.HDD || type == Storage.SSD) {
             successNum++;
             if (type == Storage.SSD) {
@@ -185,7 +197,8 @@ public class Namenode implements Serializable {
             FileReader fr = new FileReader(path);
             HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
             config.createDatanodeList(this);
-
+            this.blockSize = config.getBlockSize();
+            this.replicaCount = config.getReplicaCount();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -197,7 +210,8 @@ public class Namenode implements Serializable {
             FileReader fr = new FileReader(path);
             HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
             config.setDatanodeList(this);
-
+            this.blockSize = config.getBlockSize();
+            this.replicaCount = config.getReplicaCount();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -209,6 +223,8 @@ public class Namenode implements Serializable {
         try {
             FileReader fr = new FileReader(path);
             HDFSConfig config = gson.fromJson(fr, HDFSConfig.class);
+            //this.blockSize = config.getBlockSize();
+            //this.replicaCount = config.getReplicaCount();
             config.setHFileList(this);
 
         } catch (FileNotFoundException e) {
@@ -220,8 +236,9 @@ public class Namenode implements Serializable {
         Random random = new Random();
 
         for (int i = 0; i < fileNum; i++) {
-            double size = random.nextInt(maxSize - minSize) + minSize;
-            this.HFileList.add(new HFile(size, this));
+            //double size = random.nextInt(maxSize - minSize) + minSize;
+
+            this.HFileList.add(new HFile(minSize, this));
         }
         uploadFiles();
     }
@@ -238,17 +255,6 @@ public class Namenode implements Serializable {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public void resetStorages() {
-        Iterator<List<Datanode>> listIterator = this.datanodeList.values().iterator();
-        while (listIterator.hasNext()) {
-            Iterator<Datanode> iterator = listIterator.next().iterator();
-            while (iterator.hasNext()) {
-                Datanode datanode = iterator.next();
-                datanode.resetStorages();
-            }
-        }
     }
 
     public void addHFile(HFile hFile) {
@@ -283,5 +289,34 @@ public class Namenode implements Serializable {
             }
         }
         return null;
+    }
+
+    public Map<Integer,List<Double>> getRackAccessTime(){
+        Map<Integer,List<Double>> record = new HashMap<>();
+        Iterator<Map.Entry<Integer, List<Datanode>>> entryIterator = datanodeList.entrySet().iterator();
+        while (entryIterator.hasNext()){
+            Map.Entry<Integer, List<Datanode>> entry = entryIterator.next();
+            ArrayList<Double> list = new ArrayList<>();
+            list.add(0.0);
+            list.add(0.0);
+            list.add(0.0);
+            list.add(0.0);
+            record.put(entry.getKey(),list);
+            Iterator<Datanode> iterator = entry.getValue().iterator();
+            while (iterator.hasNext()){
+                Datanode datanode = iterator.next();
+                List<Double> sum = record.get(entry.getKey());
+                double tmp = sum.get(0);
+                sum.set(0,tmp + datanode.getInfo().getSsdAccessCount());
+                tmp = sum.get(1);
+                sum.set(1,tmp + datanode.getSsdStorage().getUsedSize());
+                tmp = sum.get(2);
+                sum.set(2,tmp + datanode.getInfo().getHddAccessCount());
+                tmp = sum.get(3);
+                sum.set(3,tmp + datanode.getHddStorage().getUsedSize());
+                record.put(entry.getKey(),sum);
+            }
+        }
+        return record;
     }
 }

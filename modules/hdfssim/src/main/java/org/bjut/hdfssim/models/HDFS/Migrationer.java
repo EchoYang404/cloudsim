@@ -54,6 +54,7 @@ public class Migrationer {
                     if(time - lastDownMigrateTime > Configuration.getDoubleProperty("downMigrateInterval") && datanode.getSSDUtilization() > Configuration.getDoubleProperty("threshold") * 0.9)
                     {
                         cloudletList.addAll(downMigrate(datanode,time));
+                        lastDownMigrateTime = time;
                     }
                 }
             }

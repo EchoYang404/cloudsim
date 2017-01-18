@@ -22,11 +22,9 @@ public class Request {
     // source datanode to read file
     private Datanode addr;
 
-    private double startTime;
     private double finishedTime;
-    private boolean isStarted;
     private boolean isFinished;
-    private int currentCloudlet;
+    private int currentNum;
 
     public Request(Datanode addr, HFile hFile, double submitTime) {
         this.id = Id.pollId(this.getClass());
@@ -34,11 +32,9 @@ public class Request {
         this.submitTime = submitTime;
         this.addr = addr;
         this.cloudletList = new ArrayList<>();
-        this.startTime = Double.MAX_VALUE;
         this.finishedTime = Double.MAX_VALUE;
-        this.isStarted = false;
         this.isFinished = false;
-        this.currentCloudlet = 0;
+        this.currentNum = 0;
 
         createReadCloudlet();
     }
@@ -52,7 +48,7 @@ public class Request {
     }
 
     public ReadCloudlet getCurrentReadCloudlet() {
-        return cloudletList.get(currentCloudlet);
+        return cloudletList.get(currentNum);
     }
 
     public boolean isFinished() {
@@ -68,9 +64,7 @@ public class Request {
     }
 
     public void start(double time) {
-        this.startTime = time;
         this.getCurrentReadCloudlet().start(time);
-        this.isStarted = true;
     }
 
     public HDFSBroker getBroker() {
@@ -82,18 +76,18 @@ public class Request {
     }
 
     public boolean toNext() {
-        if (this.cloudletList.size() > (currentCloudlet + 1))
+        if (this.cloudletList.size() > (currentNum + 1))
         {
-            double startTime = this.cloudletList.get(currentCloudlet).getFinishedTime();
-            this.currentCloudlet++;
-            this.cloudletList.get(currentCloudlet).start(startTime);
+            double startTime = this.cloudletList.get(currentNum).getFinishedTime();
+            this.currentNum++;
+            this.cloudletList.get(currentNum).start(startTime);
             return true;
         }
         else
         {
             this.isFinished = true;
-            this.finishedTime = this.cloudletList.get(currentCloudlet).getFinishedTime();
-            Log.printLine("request " + id + " time " + finishedTime);
+            this.finishedTime = this.cloudletList.get(currentNum).getFinishedTime();
+            //Log.printLine("request " + id + " time " + finishedTime);
             return false;
         }
     }
@@ -105,8 +99,8 @@ public class Request {
         return finishedTime;
     }
 
-    public int getCurrentCloudlet() {
-        return currentCloudlet;
+    public int getCurrentNum() {
+        return currentNum;
     }
 
     public int getId() {

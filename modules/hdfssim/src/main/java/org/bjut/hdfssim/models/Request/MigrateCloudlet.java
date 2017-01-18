@@ -35,6 +35,5 @@ public class MigrateCloudlet extends HCloudlet {
 
     @Override
     protected void stop() {
-
     }
 }
