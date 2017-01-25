@@ -13,58 +13,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class Helper {
-    public static void printStorageUsage(Namenode namenode) {
-        Iterator<Map.Entry<Integer, List<Datanode>>> entryIterator = namenode.getDatanodeList().entrySet().iterator();
-        while (entryIterator.hasNext()) {
-            Map.Entry<Integer, List<Datanode>> entry = entryIterator.next();
-            Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
-            while (datanodeIterator.hasNext()) {
-                Datanode datanode = datanodeIterator.next();
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD " + datanode
-                        .getStorageByType(Storage.SSD).getUsedSize());
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD " + datanode
-                        .getStorageByType(Storage.HDD).getUsedSize());
-            }
-        }
-    }
-
-    public static void printStorageAccessTime(Namenode namenode) {
-        Iterator<Map.Entry<Integer, List<Datanode>>> entryIterator = namenode.getDatanodeList().entrySet().iterator();
-        while (entryIterator.hasNext()) {
-            Map.Entry<Integer, List<Datanode>> entry = entryIterator.next();
-            Iterator<Datanode> datanodeIterator = entry.getValue().iterator();
-            while (datanodeIterator.hasNext()) {
-                Datanode datanode = datanodeIterator.next();
-
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " SSD acc " + datanode
-                        .getInfo().getSsdAccessCount());
-                System.out.println("RId " + entry.getKey() + " DId " + datanode.getId() + " HDD acc " + datanode
-                        .getInfo().getHddAccessCount());
-            }
-        }
-    }
-
-    public static void saveResult(List<Request> requestList, String path) {
-        try {
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(new File(path)), ',');
-            String[] head = {"fileSize", "submitTime", "finishedTime", "useTime", "=sum(D2:D" + (requestList.size() +
-                    1) + ")/" + requestList.size()};
-            csvWriter.writeNext(head);
-
-            Iterator<Request> iterator = requestList.iterator();
-            while (iterator.hasNext()) {
-                Request r = iterator.next();
-                String[] item = {Double.toString(r.gethFile().getSize()), Double.toString(r.getSubmitTime()),
-                        Double.toString(r.getFinishedTime()), Double.toString(r.getFinishedTime() - r.getSubmitTime()
-                ), Integer.toString(r.gethFile().getBlockList().size()), Integer.toString(r.getCurrentNum())};
-                csvWriter.writeNext(item);
-            }
-            csvWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void saveExResult(Namenode namenode, List<Request> requestList, int exType) {
         String path = Configuration.getBasePath() + Configuration.getStringProperty("resultPath") + namenode
                 .getBlockSize() + "_" + namenode.getReplicaCount() + ".csv";
@@ -83,8 +31,10 @@ public class Helper {
         if (!file.exists()) {
             try {
                 FileWriter writer = new FileWriter(path, true);
+//                writer.write("requestCount,finishedCount,finishedTime,totalSize,totalUseTime,avgSpeed,Type," +
+//                        "SSD_acc_1,SSD_use_1,HDD_acc_1,HDD_use_1\n");
                 writer.write("requestCount,finishedCount,finishedTime,totalSize,totalUseTime,avgSpeed,Type," +
-                        "SSD_acc_1,SSD_use_1,HDD_acc_1,HDD_use_1\n");
+                        "SSDAcc,SSDUsage,inDatanode,inRack,betweenRack\n");
                 writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -116,13 +66,22 @@ public class Helper {
             sb.append(Double.toString(totalSize / totalUseTime) + ",");
             sb.append(exType + ",");
             Iterator<List<Double>> listIterator = namenode.getRackAccessTime().values().iterator();
+            double acc = 0;
+            double usage = 0;
             while (listIterator.hasNext()) {
                 List<Double> list = listIterator.next();
-                sb.append(list.get(0) + ",");
-                sb.append(list.get(1) + ",");
-                sb.append(list.get(2) + ",");
-                sb.append(list.get(3) + ",");
+                acc += list.get(0);
+                usage += list.get(1);
+//                sb.append(list.get(0) + ",");
+//                sb.append(list.get(1) + ",");
+//                sb.append(list.get(2) + ",");
+//                sb.append(list.get(3) + ",");
             }
+            sb.append(acc + ",");
+            sb.append(usage + ",");
+            sb.append(namenode.getMigrationer().getSizeInDatanode() + ",");
+            sb.append(namenode.getMigrationer().getSizeInRack() + ",");
+            sb.append(namenode.getMigrationer().getSizeBetweenRack() + ",");
             String result = sb.substring(0, sb.length() - 1);
             writer.write(result + '\n');
             writer.close();

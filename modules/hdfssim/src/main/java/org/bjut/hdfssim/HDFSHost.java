@@ -3,7 +3,7 @@ package org.bjut.hdfssim;
 import org.bjut.hdfssim.models.HDFS.Datanode;
 import org.bjut.hdfssim.models.Request.HCloudlet;
 import org.bjut.hdfssim.models.Request.ReadCloudlet;
-import org.bjut.hdfssim.provisioners.ProvisionerForHDFS;
+import org.bjut.hdfssim.models.Request.HDFSProvisioner;
 
 import java.io.*;
 import java.util.*;
@@ -25,37 +25,37 @@ public class HDFSHost implements Serializable {
     /**
      * The ssd provisioner for hdfs.
      */
-    private ProvisionerForHDFS ssdProvisioner;
+    private HDFSProvisioner ssdProvisioner;
 
     /**
      * The hdd provisioner for hdfs.
      */
-    private ProvisionerForHDFS hddProvisioner;
+    private HDFSProvisioner hddProvisioner;
 
     /**
      * The bw provisioner for hdfs.
      */
-    private ProvisionerForHDFS bwProvisioner;
+    private HDFSProvisioner bwProvisioner;
 
     /**
      * The net provisioner for hdfs.
      */
-    private ProvisionerForHDFS netProvisioner;
+    private HDFSProvisioner netProvisioner;
 
-    private List<ProvisionerForHDFS> peProvisionerList;
+    private List<HDFSProvisioner> peProvisionerList;
 
     public HDFSHost(Datanode datanode, double ssdMaxTransferRate, double hddMaxTransferRate, double bw, int coreNum,
                     double mips) {
         this.id = datanode.getId();
         this.datanode = datanode;
-        this.ssdProvisioner = new ProvisionerForHDFS(ssdMaxTransferRate, HCloudlet.DISK);
-        this.hddProvisioner = new ProvisionerForHDFS(hddMaxTransferRate, HCloudlet.DISK);
-        this.bwProvisioner = new ProvisionerForHDFS(bw, HCloudlet.BW);
-        this.netProvisioner = new ProvisionerForHDFS(Configuration.getDoubleProperty("remoteRackTransferRate"),
+        this.ssdProvisioner = new HDFSProvisioner(ssdMaxTransferRate, HCloudlet.DISK);
+        this.hddProvisioner = new HDFSProvisioner(hddMaxTransferRate, HCloudlet.DISK);
+        this.bwProvisioner = new HDFSProvisioner(bw, HCloudlet.BW);
+        this.netProvisioner = new HDFSProvisioner(Configuration.getDoubleProperty("remoteRackTransferRate"),
                 HCloudlet.NET);
         this.peProvisionerList = new ArrayList<>();
         for (int i = 0; i < coreNum; i++) {
-            peProvisionerList.add(new ProvisionerForHDFS(mips, HCloudlet.CPU));
+            peProvisionerList.add(new HDFSProvisioner(mips, HCloudlet.CPU));
         }
         this.cloudletList = new ArrayList<>();
         this.finishedList = new ArrayList<>();
@@ -64,8 +64,8 @@ public class HDFSHost implements Serializable {
     public void addCloudLet(double time, HCloudlet cloudlet) {
         cloudlet.allocateHost(this);
         int minCPUNum = Integer.MAX_VALUE;
-        ProvisionerForHDFS pe = null;
-        for (ProvisionerForHDFS provisioner : peProvisionerList) {
+        HDFSProvisioner pe = null;
+        for (HDFSProvisioner provisioner : peProvisionerList) {
             if (provisioner.getCurrentNum() < minCPUNum) {
                 pe = provisioner;
                 minCPUNum = provisioner.getCurrentNum();
@@ -84,7 +84,7 @@ public class HDFSHost implements Serializable {
     public SortedSet<HCloudlet> excuteCloudlets(double time) {
         SortedSet<HCloudlet> completeList = new TreeSet<>();
         // createExConfig all cpus cloudlets
-        for (ProvisionerForHDFS provisioner : peProvisionerList) {
+        for (HDFSProvisioner provisioner : peProvisionerList) {
             completeList.addAll(provisioner.excuteCloudlets(time));
         }
         Iterator<HCloudlet> iterator = completeList.iterator();
@@ -136,7 +136,7 @@ public class HDFSHost implements Serializable {
         double startTime = cloudlet.getCurrentStage().getFinishedTime();
         // block所在磁盘介质类型
         int type = cloudlet.getHost().datanode.getStorageTypeByBlockId(cloudlet.getBlockId());
-        ProvisionerForHDFS provisioner;
+        HDFSProvisioner provisioner;
         if (type == Storage.SSD) {
             provisioner = ssdProvisioner;
         } else {
@@ -192,7 +192,7 @@ public class HDFSHost implements Serializable {
 
     public HCloudlet tryExcuteCloudlets() {
         HCloudlet result = null;
-        for (ProvisionerForHDFS p : peProvisionerList) {
+        for (HDFSProvisioner p : peProvisionerList) {
             result = tryExcute(p, result);
         }
         result = tryExcute(ssdProvisioner, result);
@@ -203,7 +203,7 @@ public class HDFSHost implements Serializable {
         return result;
     }
 
-    private HCloudlet tryExcute(ProvisionerForHDFS p, HCloudlet result) {
+    private HCloudlet tryExcute(HDFSProvisioner p, HCloudlet result) {
         double time;
         if (result == null) {
             time = Double.MAX_VALUE;
@@ -223,7 +223,7 @@ public class HDFSHost implements Serializable {
 
     // 返回未使用的CPU核数
     public int getCpuUtilization() {
-        Iterator<ProvisionerForHDFS> iterator = peProvisionerList.iterator();
+        Iterator<HDFSProvisioner> iterator = peProvisionerList.iterator();
         int num = 0;
         while (iterator.hasNext()) {
             int tmp = iterator.next().getCurrentNum();

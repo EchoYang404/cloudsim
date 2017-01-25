@@ -6,20 +6,26 @@ import org.bjut.hdfssim.models.HDFS.Datanode;
 
 public class MigrateCloudlet extends HCloudlet {
     private Datanode destNode;
+    private Datanode srcNode;
 
     private int toType;
 
-    public MigrateCloudlet(int blockId, Block block, Datanode destNode, int toType) {
+    public MigrateCloudlet(int blockId, Block block, Datanode srcNode, Datanode destNode, int toType) {
         super(blockId, block.gethFile().getReplicaListById(blockId), block.getSize());
         this.resetCpuStageLength();
 
         this.setBlock(block);
+        this.srcNode = srcNode;
         this.destNode = destNode;
         this.toType = toType;
     }
 
     public Datanode getDestNode() {
         return destNode;
+    }
+
+    public Datanode getSrcNode() {
+        return srcNode;
     }
 
     @Override

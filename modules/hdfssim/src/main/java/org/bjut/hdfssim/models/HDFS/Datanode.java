@@ -3,6 +3,7 @@ package org.bjut.hdfssim.models.HDFS;
 import org.bjut.hdfssim.*;
 import org.bjut.hdfssim.config.DatanodeConfig;
 import org.bjut.hdfssim.util.Id;
+import org.cloudbus.cloudsim.Log;
 
 import java.io.Serializable;
 import java.util.List;
@@ -140,18 +141,25 @@ public class Datanode implements Serializable {
 
     public Block getBlockById(int blockId) {
         Block block = null;
-        if (ssdStorage.isContainBlock(blockId) && !ssdStorage.getBlockById(blockId).isMigrate()) {
+        if (ssdStorage.isContainBlock(blockId)) {
             block = ssdStorage.getBlockById(blockId);
-        } else if (hddStorage.isContainBlock(blockId) && !hddStorage.getBlockById(blockId).isMigrate()) {
-            block = hddStorage.getBlockById(blockId);
-        } else {
-            try {
-                throw new Exception("there is no block " + blockId + " in this datanode!");
-            } catch (Exception e) {
-                e.printStackTrace();
+            if(ssdStorage.getBlockById(blockId).isMigrate() == false){
+                return ssdStorage.getBlockById(blockId);
             }
         }
-        return block;
+
+        if (hddStorage.isContainBlock(blockId)) {
+            block = hddStorage.getBlockById(blockId);
+            if(hddStorage.getBlockById(blockId).isMigrate() == false){
+                return hddStorage.getBlockById(blockId);
+            }
+        }
+        try {
+            throw new Exception(block.isMigrate() + " there is no block " + blockId + " in  datanode "+ this.getId() +"!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void accessBlock(Block block, double time) {

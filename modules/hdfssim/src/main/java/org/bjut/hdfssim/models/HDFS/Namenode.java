@@ -5,6 +5,7 @@ import org.bjut.hdfssim.Block;
 import org.bjut.hdfssim.HDFSHost;
 import org.bjut.hdfssim.HFile;
 import org.bjut.hdfssim.Storage;
+import org.bjut.hdfssim.models.Request.MigrateCloudlet;
 import org.bjut.hdfssim.models.Request.Request;
 import org.bjut.hdfssim.config.HDFSConfig;
 
@@ -18,7 +19,7 @@ public class Namenode implements Serializable {
     private int replicaCount;
     private List<HFile> HFileList;
     private Map<Integer, List<Datanode>> datanodeList; // Map<rackId, List<datanode>>
-
+    private Migrationer migrationer;
     public Namenode() {
         blockSize = 64;
         replicaCount = 3;
@@ -40,6 +41,14 @@ public class Namenode implements Serializable {
 
     public void setReplicaCount(int replicaCount) {
         this.replicaCount = replicaCount;
+    }
+
+    public void setMigrationer(Migrationer migrationer) {
+        this.migrationer = migrationer;
+    }
+
+    public Migrationer getMigrationer() {
+        return migrationer;
     }
 
     public void addDatanode(Datanode datanode) {

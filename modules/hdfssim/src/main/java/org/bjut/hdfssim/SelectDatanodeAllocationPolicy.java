@@ -1,6 +1,7 @@
 package org.bjut.hdfssim;
 
 import org.bjut.hdfssim.models.HDFS.Datanode;
+import org.cloudbus.cloudsim.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,9 +9,10 @@ import java.util.List;
 import java.util.Random;
 
 public class SelectDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
-    //    @Override
+    @Override
     public Datanode getDatanode(List<Block> blockList, Datanode addr) {
-        Iterator<Block> iterator = blockList.iterator();
+        int blockId = blockList.get(0).getId();
+        Iterator<Block> iterator = blockList.get(0).gethFile().getReplicaListById(blockId).iterator();
         ArrayList<Double> list = new ArrayList<>();
         double sum = 0;
         while (iterator.hasNext()) {
@@ -32,7 +34,8 @@ public class SelectDatanodeAllocationPolicy implements DatanodeAllocationPolicy 
         }
         double select = new Random().nextDouble();
         for (int i = 0; i < list.size(); i++) {
-            if ((list.get(i) / sum) > select) {
+            if ((list.get(i) / sum) > select && blockList.get(i).isMigrate() == false) {
+                //Log.printLine( blockId + " "+ blockList.get(i).isMigrate() + " " + blockList.get(i).getDatanode().getId());
                 return blockList.get(i).getDatanode();
             }
         }
@@ -53,14 +56,9 @@ public class SelectDatanodeAllocationPolicy implements DatanodeAllocationPolicy 
 //
 //            HDFSHost host = block.getStorage().getDatanode().getHost();
 //            double distance = addr.getDistance(block.getStorage().getDatanode());
-//            //double tmp = 0.313 * (4 - distance) / 4 + 0.313 * host.getBwUtilization() + 0.5506 * host
-//            // .getDiskUtilization(block)/300 + 0.0935 * host
-//            // .getCpuUtilization();
 //            double tmp = 0.313 * ((4 - distance) / 4 + host.getBwUtilization() + host.getNetUtilization()) + 0.5506
-// * host.getDiskUtilization
-//                    (block) / 300 + 0.0935 * host.getCpuUtilization();
-//            if(tmp > maxValue)
-//            {
+//                    * host.getDiskUtilization(block) / 300 + 0.0935 * host.getCpuUtilization();
+//            if (tmp > maxValue) {
 //                maxValue = tmp;
 //                datanode = block.getStorage().getDatanode();
 //            }

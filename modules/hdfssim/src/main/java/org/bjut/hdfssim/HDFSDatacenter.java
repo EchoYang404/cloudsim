@@ -107,7 +107,6 @@ public class HDFSDatacenter extends SimEntity {
         if (isMigrate) {
             checkMigartion(ev.eventTime());
         }
-
         //Log.printLine("time " + ev.eventTime());
         //Log.printLine(result.getRequest().getId() + " " + result.getRequest().getCurrentNum() + " " + result
         // .getRequest().getCurrentReadCloudlet().getCurrentStageType() + " " + result.getCurrentStage()
@@ -131,5 +130,9 @@ public class HDFSDatacenter extends SimEntity {
                 }
             }
         }
+    }
+
+    public Migrationer getMigrationer() {
+        return migrationer;
     }
 }

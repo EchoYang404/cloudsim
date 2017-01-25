@@ -147,6 +147,10 @@ public abstract class HCloudlet implements Comparable<HCloudlet> {
         return blockId;
     }
 
+    public void setBlockList(List<Block> blockList) {
+        this.blockList = blockList;
+    }
+
     public List<Block> getBlockList() {
         return blockList;
     }

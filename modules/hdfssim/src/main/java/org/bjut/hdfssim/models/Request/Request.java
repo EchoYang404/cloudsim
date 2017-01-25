@@ -80,14 +80,14 @@ public class Request {
         {
             double startTime = this.cloudletList.get(currentNum).getFinishedTime();
             this.currentNum++;
-            this.cloudletList.get(currentNum).start(startTime);
+            this.getCurrentReadCloudlet().start(startTime);
             return true;
         }
         else
         {
             this.isFinished = true;
-            this.finishedTime = this.cloudletList.get(currentNum).getFinishedTime();
-            //Log.printLine("request " + id + " time " + finishedTime);
+            this.finishedTime = this.getCurrentReadCloudlet().getFinishedTime();
+            Log.printLine("request " + id + " time " + finishedTime);
             return false;
         }
     }

@@ -19,7 +19,7 @@ public class SelectWithMigrate {
             return;
         }
         String path = args[0];
-        //String path = "D:\\projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_64.0_3_100_1484558674391.json";
+        //String path = "C:\\Projects\\cloudsim\\modules\\hdfssim\\target\\classes\\ex\\ex_64.0_3_200_1484837639898.json";
         System.out.println(path);
         // First step : Create namenode
         Namenode namenode = new Namenode();

@@ -10,7 +10,8 @@ import java.util.Random;
 public class DefaultDatanodeAllocationPolicy implements DatanodeAllocationPolicy {
     @Override
     public Datanode getDatanode(List<Block> blockList, Datanode addr) {
-        Iterator<Block> iterator = blockList.iterator();
+        int blockId = blockList.get(0).getId();
+        Iterator<Block> iterator = blockList.get(0).gethFile().getReplicaListById(blockId).iterator();
         Datanode datanode = null;
         int minDis = Integer.MAX_VALUE;
         int distance;

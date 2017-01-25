@@ -86,7 +86,7 @@ public class DatanodeInfo {
 
     public List<Block> getGreaterFromHdd(double frequecy, double time) {
         List<Block> result = new ArrayList<>();
-        if(!hasNewHddAccess){
+        if (!hasNewHddAccess) {
             return result;
         }
         hasNewHddAccess = false;
@@ -96,7 +96,7 @@ public class DatanodeInfo {
             if (hddHistory.get(block).size() == 0 || block.isMigrate()) {
                 continue;
             }
-            updateBlockHistory(hddHistory.get(block).iterator(),time);
+            updateBlockHistory(hddHistory.get(block).iterator(), time);
 
             double f = (double) hddHistory.get(block).size() / Configuration.getIntProperty("maxFrequencyInterval");
             if (f >= frequecy) {
@@ -111,7 +111,7 @@ public class DatanodeInfo {
 
     public List<Block> getLessFromSsd(double frequecy, double time) {
         List<Block> result = new ArrayList<>();
-        if(!hasNewSsdAccess){
+        if (!hasNewSsdAccess) {
             return result;
         }
         hasNewSsdAccess = false;
@@ -119,7 +119,7 @@ public class DatanodeInfo {
         Iterator<Block> iterator = ssdHistory.keySet().iterator();
         while (iterator.hasNext()) {
             Block block = iterator.next();
-            updateBlockHistory(ssdHistory.get(block).iterator(),time);
+            updateBlockHistory(ssdHistory.get(block).iterator(), time);
             if (block.isMigrate()) {
                 continue;
             }
@@ -133,10 +133,9 @@ public class DatanodeInfo {
         return result;
     }
 
-    public List<Block> getRemoteFromSsd(double time)
-    {
+    public List<Block> getRemoteFromSsd(double time) {
         List<Block> result = new ArrayList<>();
-        if(!hasNewSsdAccess){
+        if (!hasNewSsdAccess) {
             return result;
         }
         hasNewSsdAccess = false;
@@ -149,12 +148,13 @@ public class DatanodeInfo {
         ValueComparator vc = new ValueComparator(ssdHistory);
         TreeMap<Block, List<Double>> sorted_map = new TreeMap<>(vc);
         sorted_map.putAll(ssdHistory);
-        double migrateSpace = this.datanode.getSsdStorage().getUsedSize() - this.datanode.getSsdStorage().getCapacity() * Configuration.getDoubleProperty("threshold") / 2;
+        double migrateSpace = this.datanode.getSsdStorage().getUsedSize() - this.datanode.getSsdStorage().getCapacity
+                () * Configuration.getDoubleProperty("threshold") / 2;
 
         Iterator<Block> blockIterator = sorted_map.keySet().iterator();
-        while (blockIterator.hasNext() && migrateSpace >= 0){
+        while (blockIterator.hasNext() && migrateSpace >= 0) {
             Block block = blockIterator.next();
-            if(block.isMigrate()){
+            if (block.isMigrate()) {
                 continue;
             }
             migrateSpace -= block.getSize();
@@ -164,25 +164,25 @@ public class DatanodeInfo {
         return result;
     }
 
-    class ValueComparator implements Comparator<Block>{
+    class ValueComparator implements Comparator<Block> {
 
         private Map<Block, List<Double>> m;
-        public ValueComparator(Map<Block, List<Double>> m){
+
+        public ValueComparator(Map<Block, List<Double>> m) {
             this.m = m;
         }
 
         @Override
         public int compare(Block o1, Block o2) {
-            if(m.get(o1).size() < m.get(o2).size()){
+            if (m.get(o1).size() < m.get(o2).size()) {
                 return -1;
-            }else {
+            } else {
                 return 1;
             }
         }
     }
 
-    private void updateBlockHistory(Iterator<Double> iterator, double time)
-    {
+    private void updateBlockHistory(Iterator<Double> iterator, double time) {
         while (iterator.hasNext()) {
             double t = iterator.next();
             if (time - t > Configuration.getIntProperty("maxFrequencyInterval")) {

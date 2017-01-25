@@ -114,10 +114,8 @@ public class HDFSConfig {
 //    public void setRequestConfigList(Namenode namenode, int requestCount) {
 //        //List<Request> requestList = new ArrayList<>();
 //        int rackCount = namenode.getDatanodeList().size();
-//        // TODO 访问的文件范围
 //        int fileCount = 150;
 //        //int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
-//        // TODO 读取请求均匀到达
 //        double submitTime = 0;
 //        double interval = Configuration.getDoubleProperty("totalTime")/requestCount;
 //        Random random = new Random();
@@ -133,7 +131,7 @@ public class HDFSConfig {
         int rackCount = namenode.getDatanodeList().size();
         // TODO 访问的文件范围
         int fileCount = 150;
-        //int fileCount = (int) Math.ceil(namenode.getHFileList().size() * 0.2);
+        //int fileCount = (int) Math.ceil(requestCount * 0.2);
         double submitTime = 0;
         double interval = Configuration.getDoubleProperty("ArriveInterval");
         double lamda = Configuration.getDoubleProperty("lamda");

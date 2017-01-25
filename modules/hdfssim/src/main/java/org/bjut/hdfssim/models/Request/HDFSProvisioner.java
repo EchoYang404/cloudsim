@@ -1,4 +1,4 @@
-package org.bjut.hdfssim.provisioners;
+package org.bjut.hdfssim.models.Request;
 
 import org.bjut.hdfssim.Configuration;
 import org.bjut.hdfssim.models.Request.HCloudlet;
@@ -7,14 +7,14 @@ import org.bjut.hdfssim.models.Request.ReadCloudlet;
 import java.io.Serializable;
 import java.util.*;
 
-public class ProvisionerForHDFS implements Serializable {
+public class HDFSProvisioner implements Serializable {
     private double capacity;
     private int currentNum;
     private final int type;
     // 正在运行的任务列表
     protected List<HCloudlet> cloudletList;
 
-    public ProvisionerForHDFS(double capacity, int type) {
+    public HDFSProvisioner(double capacity, int type) {
         this.cloudletList = new ArrayList<>();
         currentNum = 0;
         this.capacity = capacity;
